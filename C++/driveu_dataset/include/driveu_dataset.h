@@ -233,7 +233,7 @@ public:
     ~DriveuDatabase();
 
     std::vector<DriveuImage> images;
-    bool open(const std::string &path);
+    bool open(const std::string &path, const std::string &base_path);
 
 };
 

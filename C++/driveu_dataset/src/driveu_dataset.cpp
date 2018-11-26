@@ -113,7 +113,7 @@ DriveuDatabase::~DriveuDatabase() {
  * @brief DriveuDatabase::open  Open the DriveU Database from file
  * @param                       Path to database (yml)
  */
-bool DriveuDatabase::open(const std::string &path) {
+bool DriveuDatabase::open(const std::string &path, const std::string &base_path) {
 
     DriveuObject object;
     DriveuImage image;
@@ -167,7 +167,23 @@ bool DriveuDatabase::open(const std::string &path) {
         if (line.find(path_str) != std::string::npos) {
 
             size_t pos = line.find(path_str);
-            image.file_path_ = line.substr(pos + path_str.size(), line.size() -1);
+            if (base_path.empty()) {
+                image.file_path_ = line.substr(pos + path_str.size(), line.size() -1);
+            }
+            else {
+                std::string file_path = line.substr(pos + path_str.size(), line.size() -1);
+                size_t cnt = 0;
+                int i = 0;
+                for (i = file_path.rfind("/"); i != std::string::npos; i = file_path.rfind("/", i-1))
+                {
+                    ++cnt;
+                    // Finding "cat" at the start means we're done.
+                    if (i == 0 || cnt == 4) {
+                       break;
+                    }
+                }
+                image.file_path_ = base_path + '/' + file_path.substr(i, file_path.size()-1);
+            }
         }
 
         else if (line.find(disp_path_str) != std::string::npos) {
