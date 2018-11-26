@@ -85,7 +85,8 @@ The visualization should look like this
 ```Shell
 git clone https://github.com/julimueller/dtld_parsing
 cd dtld_parsing/Python
-python loadDataset.py
+python load_dtld.py --label_file <label_file_path.yml> --calib_dir <path_to_calib> --data_base_dir <dtld_dir> 
+
 ```
 Result should look like above
 ### MATLAB
