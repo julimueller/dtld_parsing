@@ -74,7 +74,7 @@ git clone https://github.com/julimueller/dtld_parsing
 1. cd dtld_parsing/C++/driveu_dataset/
 2. mkdir build && cd build
 3. cmake .. -DCMAKE_INSTALL_PREFIX="YOUR_PATH" && make -j12 install
-4. driveu_test -label_file <label_file_path.yml> -calib_path <path_to_calib> -data_base_dir <dtld_dir> 
+4. driveu_test -label_file <label_file_path.yml> -calib_dir <path_to_calib> -data_base_dir <dtld_dir> 
 
 ```
 Note: "YOUR_PATH" has to be in LD_LIBRARY_PATH. DTLD_DIR is the directory where all .zips should be unpacked.
