@@ -446,7 +446,7 @@ class CalibrationData():
 
 if __name__ == '__main__':
 
-  database = DriveuDatabase('/scratch/fs2/DriveUDataset/Essen_all.yml')
+  database = DriveuDatabase('/scratch/fs2/DTLD_final/DTLD_test.yml')
 
   calibration = CalibrationData()
   intrinsic_left = calibration.loadIntrinsicMatrix('/home/muejul3/git_repos/dtld_parsing/Calibration/intrinsic_left.yml')

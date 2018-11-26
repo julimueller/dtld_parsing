@@ -5,21 +5,41 @@
 #include <opencv2/opencv.hpp>
 #include <driveu_dataset.h>
 
+bool parseArgs(int argc, char **argv, std::string &label_file, std::string &calib_dir, std::string &data_base_dir) {
 
+    for (int i = 0; i < argc; i++) {
+
+        if ((std::string(argv[i]) == "-label_file") && (i+1 < argc)) {
+            label_file = std::stringstream(argv[i + 1]).str();
+        }
+
+        if ((std::string(argv[i]) == "-calib_dir") && (i+1 < argc)) {
+            calib_dir = std::stringstream(argv[i + 1]).str();
+        }
+
+        if ((std::string(argv[i]) == "-data_base_dir") && (i+1 < argc)) {
+            data_base_dir = std::stringstream(argv[i + 1]).str();
+        }
+    }
+}
 
 int main(int argc, char** argv) {
+
+    std::string label_file, calib_dir, data_base_dir;
+
+    parseArgs(argc, argv, label_file, calib_dir, data_base_dir);
 
     DriveuDatabase database;
     CalibrationData calib_left, calib_right;
 
-    database.open("/media/muejul3/MyBook/DriveUDataset/Essen_all.yml");
+    database.open(label_file, data_base_dir);
 
-    calib_left.loadIntrinsicMatrix("/home/muejul3/driveu-dataset-parsing/Calibration/intrinsic_left.yml");
-    calib_left.loadProjectionMatrix("/home/muejul3/driveu-dataset-parsing/Calibration/projection_left.yml");
-    calib_left.loadDistortionMatrix("/home/muejul3/driveu-dataset-parsing/Calibration/distortion_left.yml");
-    calib_left.loadRectificationMatrix("/home/muejul3/driveu-dataset-parsing/Calibration/rectification_left.yml");
-    calib_left.loadExtrinsicMatrix("/home/muejul3/driveu-dataset-parsing/Calibration/extrinsic.yml");
-    calib_right.loadProjectionMatrix("/home/muejul3/driveu-dataset-parsing/Calibration/projection_right.yml");
+    calib_left.loadIntrinsicMatrix(calib_dir + "/intrinsic_left.yml");
+    calib_left.loadProjectionMatrix(calib_dir + "/projection_left.yml");
+    calib_left.loadDistortionMatrix(calib_dir +  + "/distortion_left.yml");
+    calib_left.loadRectificationMatrix(calib_dir + "/rectification_left.yml");
+    calib_left.loadExtrinsicMatrix(calib_dir + "/extrinsic.yml");
+    calib_right.loadProjectionMatrix(calib_dir + "/projection_right.yml");
 
 
     #ifdef OpenCV_FOUND
@@ -48,7 +68,7 @@ int main(int argc, char** argv) {
             continue;
         }
         cv::Mat dispMat_viz;
-        dispMat.copyTo(dispMat_viz);//dispMat / 255.0;
+        dispMat.copyTo(dispMat_viz);
         database.images[i].visualizeDisparityImage(dispMat_viz);
 
         std::vector<cv::Rect> rects = database.images[i].mapLabelsToDisparityImage(calib_left);
@@ -65,11 +85,8 @@ int main(int argc, char** argv) {
         cv::Mat right(im3, cv::Rect(imageMat.cols, 0, imageMat.cols, imageMat.rows));
         dispMat_viz.copyTo(right);
 
-        cv::imshow("DriveU Dataset", im3);
+        cv::imshow("DTLD images", im3);
         cv::waitKey(1);
-
-        //std::cout << "Velocity: " << database.images[i].vehicle_data.velocity_ << " m/s, Yaw-Rate: " << database.images[i].vehicle_data.yaw_rate_ << " rad/s, Longitude: " << database.images[i].vehicle_data.longitude_ << " °, Latitude: " << database.images[i].vehicle_data.latitude_ << " °." << std::endl;
-
 
 
     }
