@@ -60,7 +60,7 @@ For each sequences, images and disparity images are available. Filename indicate
 #### 1. Check our documentation
 Documentation is stored at /dtld_parsing/doc/. We give insights into the data and explain how to interpret it.
 #### 2. Change absolute paths
-Do not forget to change the absolute paths of the images in all label files (.yml)
+Do not forget to change the absolute paths of the images in all label files (.yml). 
 
 ## Using the dataset 
 ### C++
@@ -74,10 +74,10 @@ git clone https://github.com/julimueller/dtld_parsing
 1. cd dtld_parsing/C++/driveu_dataset/
 2. mkdir build && cd build
 3. cmake .. -DCMAKE_INSTALL_PREFIX="YOUR_PATH" && make -j12 install
-4. driveu_test -label_file <label_file_path.yml> -calib_path <path_to_calib>
+4. driveu_test -label_file <label_file_path.yml> -calib_path <path_to_calib> -data_base_dir <dtld_dir> 
 
 ```
-Note: "YOUR_PATH" has to be in LD_LIBRARY_PATH.
+Note: "YOUR_PATH" has to be in LD_LIBRARY_PATH. DTLD_DIR is the directory where all .zips should be unpacked.
 The visualization should look like this
 
 ![alt text](https://github.com/julimueller/dtld_parsing/blob/master/images/c%2B%2B_demo.png)
