@@ -4,6 +4,7 @@ import numpy as np
 import os.path
 import copy
 import time
+import argparse
 
 __author__ = "Andreas Fregin, Julian Mueller and Klaus Dietmayer"
 __maintainer__ = "Julian Mueller"
@@ -201,7 +202,7 @@ class DriveuDatabase():
     self.images = []
     self.file_path = file_path
 
-  def open(self):
+  def open(self, data_base_dir):
     """Method loading the dataset
 
     """
@@ -213,8 +214,15 @@ class DriveuDatabase():
       for i, image_dict in enumerate(images):
 
         image = DriveuImage()
-        image.file_path = image_dict['path']
-        image.disp_file_path = image_dict['disp_path']
+        if data_base_dir != '':
+            inds = [i for i, c in enumerate(image_dict['path']) if c == '/']
+            image.file_path = data_base_dir + '/' + image_dict['path'][inds[-4]:]
+            inds = [i for i, c in enumerate(image_dict['disp_path']) if c == '/']
+            image.disp_file_path = data_base_dir + '/' + image_dict['disp_path'][inds[-4]:]
+            print image.file_path
+        else:
+            image.file_path = image_dict['path']
+            image.disp_file_path = image_dict['disp_path']
         image.timestamp = image_dict['time_stamp']
         image.vehicle_data.velocity = image_dict['velocity']
         image.vehicle_data.yaw_rate = image_dict['yaw_rate']
@@ -443,22 +451,27 @@ class CalibrationData():
 
     return matrix
 
+def parse_args():
 
-if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--label_file', default='')
+  parser.add_argument('--calib_dir', default='')
+  parser.add_argument('--data_base_dir', default='')
+  return parser.parse_args()
 
-  database = DriveuDatabase('/scratch/fs2/DTLD_final/DTLD_test.yml')
+
+def main(args):
+
+  database = DriveuDatabase(args.label_file)
 
   calibration = CalibrationData()
-  intrinsic_left = calibration.loadIntrinsicMatrix('/home/muejul3/git_repos/dtld_parsing/Calibration/intrinsic_left.yml')
-  rectification_left = calibration.loadRectificationMatrix('/home/muejul3/git_repos/dtld_parsing/Calibration/rectification_left.yml')
-  projection_left = calibration.loadProjectionMatrix('/home/muejul3/git_repos/dtld_parsing/Calibration/projection_left.yml')
-  extrinsic = calibration.loadExtrinsicMatrix('/home/muejul3/git_repos/dtld_parsing/Calibration/extrinsic.yml')
-  distortion_left = calibration.loadDistortionMatrix('/home/muejul3/git_repos/dtld_parsing/Calibration/distortion_left.yml')
+  intrinsic_left = calibration.loadIntrinsicMatrix(args.calib_dir + '/intrinsic_left.yml')
+  rectification_left = calibration.loadRectificationMatrix(args.calib_dir + '/rectification_left.yml')
+  projection_left = calibration.loadProjectionMatrix(args.calib_dir + '/projection_left.yml')
+  extrinsic = calibration.loadExtrinsicMatrix(args.calib_dir + '/extrinsic.yml')
+  distortion_left = calibration.loadDistortionMatrix(args.calib_dir + '/distortion_left.yml')
 
-  database.open()
-
-  print calibration.intrinsic_matrix.fx
-  print calibration.intrinsic_matrix.intrinsic_matrix
+  database.open(args.data_base_dir)
 
   print "Intrinsic Matrix:\n\n" + str(intrinsic_left) + "\n"
   print "Extrinsic Matrix:\n\n" + str(extrinsic) + "\n"
@@ -468,22 +481,20 @@ if __name__ == '__main__':
 
   for idx_d, img in enumerate(database.images):
 
-    img_disp_orig = img.getDisparityImage()
     img_disp = img.visualizeDisparityImage()
-
     rects = img.mapLabelsToDisparityImage(calibration)
 
     for rect in rects:
-
       cv2.rectangle(img_disp, (int(rect[0]), int(rect[1])), (int(rect[0]) + int(rect[2]), int(rect[1]) + int(rect[3])), (255,255,255), 2)
-      img_color = img.getLabeledImage()
 
+    img_color = img.getLabeledImage()
     img_color = cv2.resize(img_color, (1024, 440))
 
     img_concat = np.concatenate((img_color, img_disp), axis=1)
     cv2.imshow("DTLD_visualized", img_concat)
     cv2.waitKey(1)
 
-    
+if __name__ == '__main__':
+  main(parse_args())
 
 
