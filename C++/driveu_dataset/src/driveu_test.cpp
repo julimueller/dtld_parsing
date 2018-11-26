@@ -7,19 +7,57 @@
 
 bool parseArgs(int argc, char **argv, std::string &label_file, std::string &calib_dir, std::string &data_base_dir) {
 
+    label_file = "";
+    calib_dir = "";
+    data_base_dir = "";
+
     for (int i = 0; i < argc; i++) {
 
         if ((std::string(argv[i]) == "-label_file") && (i+1 < argc)) {
             label_file = std::stringstream(argv[i + 1]).str();
+            continue;
         }
 
         if ((std::string(argv[i]) == "-calib_dir") && (i+1 < argc)) {
             calib_dir = std::stringstream(argv[i + 1]).str();
+            continue;
         }
 
         if ((std::string(argv[i]) == "-data_base_dir") && (i+1 < argc)) {
             data_base_dir = std::stringstream(argv[i + 1]).str();
+            continue;
         }
+    }
+
+    if (label_file == "" || calib_dir == "") {
+        std::cout << std::endl;
+        std::cout << "=======================================================================================" << std::endl;
+        std::cout << "\t\t\t      DRIVEU TEST PARAMETERS" << std::endl;
+        std::cout << "=======================================================================================" << std::endl;
+        std::cout << std::endl;
+        std::cout << "Label file and/or calibration file empty!" << std::endl;
+        std::cout << "Usage: driveu_test -label_file <label_file_path.yml> -calib_dir <path_to_calib> -data_base_dir <dtld_dir>" << std::endl;
+        std::cout << std::endl;
+        std::cout << "=======================================================================================" << std::endl;
+        std::cout << "=======================================================================================" << std::endl;
+        std::cout << std::endl;
+        return false;
+    }
+    else {
+        std::cout << std::endl;
+        std::cout << "=======================================================================================" << std::endl;
+        std::cout << "\t\t\t      DRIVEU TEST PARAMETERS" << std::endl;
+        std::cout << "=======================================================================================" << std::endl;
+        std::cout << std::endl;
+
+        std::cout << "Label File:\t" << label_file << std::endl;
+        std::cout << "Calibration Dir:\t\t" << calib_dir << std::endl;
+        std::cout << "Data Dir:\t\t" << data_base_dir << std::endl;
+        std::cout << std::endl;
+        std::cout << "=======================================================================================" << std::endl;
+        std::cout << "=======================================================================================" << std::endl;
+        std::cout << std::endl;
+        return true;
     }
 }
 
@@ -27,7 +65,9 @@ int main(int argc, char** argv) {
 
     std::string label_file, calib_dir, data_base_dir;
 
-    parseArgs(argc, argv, label_file, calib_dir, data_base_dir);
+    if (!parseArgs(argc, argv, label_file, calib_dir, data_base_dir)) {
+        return 0;
+    }
 
     DriveuDatabase database;
     CalibrationData calib_left, calib_right;
