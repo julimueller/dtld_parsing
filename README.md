@@ -4,7 +4,9 @@ This repository provides code for parsing the DriveU Traffic Light Dataset (DTLD
 ## Paper
 Paper see https://ieeexplore.ieee.org/document/8460737.
 ## Download the dataset
-The data itself can be downloaded from http://www.traffic-light-data.com/. 
+**INFO (11/27/2018): The Dataset is online now!** 
+
+The data can be downloaded from http://www.traffic-light-data.com/. 
 
     .
     ├── DTLD                 # DTLD
