@@ -2,7 +2,7 @@
 
 /**
     @file       driveu_dataset.cpp
-    @author     Julian Müller (julian-2.mueller@uni-ulm.de), Andreas Fregin (andreas.fregin@daimler.com)
+    @author     Julian Müller (julian.mu.mueller@daimler.com), Andreas Fregin (andreas.fregin@daimler.com)
     @date       11/13/2017
     @brief      Contains class definitions and methods to parse the DriveU Database: Label format, load images, load disparity images and load calibration data. Either with or without OpenCV.
 */
