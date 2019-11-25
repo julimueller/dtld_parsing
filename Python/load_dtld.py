@@ -8,7 +8,7 @@ import argparse
 
 __author__ = "Andreas Fregin, Julian Mueller and Klaus Dietmayer"
 __maintainer__ = "Julian Mueller"
-__email__ = "julian-2.mueller@uni-ulm.de"
+__email__ = "julian.mu.mueller@daimler.com"
 
 class DriveuObject():
   """ Class describing a label object in the dataset by rectangle
