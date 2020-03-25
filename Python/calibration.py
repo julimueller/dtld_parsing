@@ -10,6 +10,8 @@ import numpy as np
 class IntrinsicCalibration():
     """
     Intrinsic calibration
+
+    Attributes:
         fx(float):  Focal length in x
         fy(float):  Focal length y
         cx(float):  principal point x
