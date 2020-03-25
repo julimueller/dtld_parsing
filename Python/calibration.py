@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__author__ = "Julian Mueller and Klaus Dietmayer"
+__author__ = "Andreas Fregin, Julian Mueller and Klaus Dietmayer"
 __maintainer__ = "Julian Mueller"
 __email__ = "julian.mu.mueller@daimler.com"
 
