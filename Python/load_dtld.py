@@ -1,14 +1,27 @@
+from __future__ import print_function
+
+__author__ = "Andreas Fregin, Julian Mueller and Klaus Dietmayer"
+__maintainer__ = "Julian Mueller"
+__email__ = "julian.mu.mueller@daimler.com"
+
 import cv2
-import yaml 
+import yaml
 import numpy as np
 import os.path
 import copy
 import time
 import argparse
+import logging
 
-__author__ = "Andreas Fregin, Julian Mueller and Klaus Dietmayer"
-__maintainer__ = "Julian Mueller"
-__email__ = "julian.mu.mueller@daimler.com"
+from calibration import (
+  IntrinsicCalibration,
+  ExtrinsicCalibration,
+  RectificationMatrix,
+  ProjectionMatrix,
+  DistortionCalibration,
+  CalibrationData
+)
+
 
 class DriveuObject():
   """ Class describing a label object in the dataset by rectangle
@@ -107,7 +120,7 @@ class DriveuImage():
 
     else:
 
-      print "Image " + str(self.file_path) + "not found"
+      logging.exception("Image {} not found".format(self.file_path))
 
       return False, img
 
@@ -178,7 +191,7 @@ class DriveuImage():
       pt_distorted = np.array([[float(labels.x), float(labels.y)], [float(labels.x + labels.width), float(labels.y + labels.height)]])
       pt_distorted = pt_distorted[:, np.newaxis, :]
 
-      pt_undistorted = cv2.undistortPoints(pt_distorted,calibration.intrinsic_matrix.intrinsic_matrix, calibration.distortion_matrix.distortion_matrix, R = calibration.rectification_matrix.rectification_matrix, P = calibration.projection_matrix.projection_matrix)
+      pt_undistorted = cv2.undistortPoints(pt_distorted,calibration.intrinsic_calibration.intrinsic_matrix, calibration.distortion_calibration.distortion_matrix, R = calibration.rectification_matrix.rectification_matrix, P = calibration.projection_matrix.projection_matrix)
       x = pt_undistorted[0][0][0]
       y = pt_undistorted[0][0][1]
       w = pt_undistorted[1][0][0] - pt_undistorted[0][0][0]
@@ -208,7 +221,7 @@ class DriveuDatabase():
     """
 
     if os.path.exists(self.file_path) is not None:
-      print 'Opening DriveuDatabase from File: ' + str(self.file_path)
+      logging.info('Opening DriveuDatabase from file: {}'.format(self.file_path))
       images = yaml.load(open(self.file_path, 'rb').read())
 
       for i, image_dict in enumerate(images):
@@ -219,7 +232,6 @@ class DriveuDatabase():
             image.file_path = data_base_dir + '/' + image_dict['path'][inds[-4]:]
             inds = [i for i, c in enumerate(image_dict['disp_path']) if c == '/']
             image.disp_file_path = data_base_dir + '/' + image_dict['disp_path'][inds[-4]:]
-            print image.file_path
         else:
             image.file_path = image_dict['path']
             image.disp_file_path = image_dict['disp_path']
@@ -250,206 +262,8 @@ class DriveuDatabase():
 
 
     else:
-      print 'Opening DriveuDatabase from File: ' + str(self.file_path) + 'failed. File or Path incorrect.'
-
-class IntrinsicCalibration():
-  """ Class describing the Intrinsic Calibration
-
-  Attributes:
-    fx  Focal length x
-    fy  Focal length y
-    cx  principal point x
-    cy  principal point y
-    intrinsic_matrix Intrinsic camera matrix (opencv format)
-
-    """
-  def __init__(self):
-    self.fx = 0.
-    self.fy = 0.
-    self.cx = 0.
-    self.cy = 0.
-    self.intrinsic_matrix = []
-
-class ExtrinsicCalibration():
-  """ Class describing the Extrinsic Calibration from rear axis to left camera
-
-  Attributes:
-    r_i Rotation parts
-    ti  Translation parts
-  """
-  def __init__(self):
-    self.r_11 = 0.
-    self.r_12 = 0.
-    self.r_13 = 0.
-    self.r_21 = 0.
-    self.r_22 = 0.
-    self.r_23 = 0.
-    self.r_31 = 0.
-    self.r_32 = 0.
-    self.r_33 = 0.
-    self.tx = 0.
-    self.ty = 0.
-    self.tz = 0.
-    self.extrinsic_matrix = []
-
-class DistortionCalibration():
-  """ Class describing the Distortion
-
-  Attributes:
-    k1,k2,k3  radial distortion
-    p1, p2    tangential distortion
-"""
-  def __init__(self):
-    self.k1 = 0.
-    self.k2 = 0.
-    self.k3 = 0.
-    self.p1 = 0.
-    self.p2 = 0.
-    self.distortion_matrix = []
-
-class ProjectionMatrix():
-  def __init__(self):
-    self.fx = 0.
-    self.fy = 0.
-    self.cx = 0.
-    self.cy = 0.
-    self.tx = 0.
-    self.ty = 0.
-    self.baseline = 0.
-    self.projection_matrix = []
-
-
-class RectificationMatrix():
-  def __init__(self):
-    self.r_11 = 0.
-    self.r_12 = 0.
-    self.r_13 = 0.
-    self.r_21 = 0.
-    self.r_22 = 0.
-    self.r_23 = 0.
-    self.r_31 = 0.
-    self.r_32 = 0.
-    self.r_33 = 0.
-    self.rectification_matrix = []
-
-class CalibrationData():
-
-  def __init__(self):
-    self.intrinsic_matrix = IntrinsicCalibration()
-    self.extrinsic_matrix = ExtrinsicCalibration()
-    self.distortion_matrix = DistortionCalibration()
-    self.projection_matrix = ProjectionMatrix()
-    self.rectification_matrix = RectificationMatrix()
-
-
-  def loadYmlMatrix(self, path):
-    """Returns calibration matrix loaded from .yml file."""
-
-    skip_lines = 2
-    with open(path) as infile:
-        for i in range(skip_lines):
-            _ = infile.readline()
-        data = yaml.load(infile)
-        matrix = np.reshape(data['data'],(data['rows'],data['cols']))
-
-    return matrix, data['rows'], data['cols']
-
-  def loadIntrinsicMatrix(self, path):
-    matrix, rows, cols = self.loadYmlMatrix(path)
-
-    if (rows != 3 or cols != 3):
-      print "Intrinsic camera matrix has not shape 3x3, please check input file!"
-      return
-
-    self.intrinsic_matrix.fx = matrix[0][0]
-    self.intrinsic_matrix.fy = matrix[1][1]
-    self.intrinsic_matrix.cx = matrix[0][2]
-    self.intrinsic_matrix.cy = matrix[1][2]
-
-    self.intrinsic_matrix.intrinsic_matrix = matrix
-
-    return matrix
-
-  def loadExtrinsicMatrix(self, path):
-    matrix, rows, cols = self.loadYmlMatrix(path)
-
-    if (rows != 3 or cols != 4):
-      print "Extrinsic camera matrix has not shape 3x4, please check input file!"
-      return
-
-    self.extrinsic_matrix.r_11 = matrix[0][0]
-    self.extrinsic_matrix.r_12 = matrix[0][1]
-    self.extrinsic_matrix.r_13 = matrix[0][2]
-    self.extrinsic_matrix.r_21 = matrix[1][0]
-    self.extrinsic_matrix.r_22 = matrix[1][1]
-    self.extrinsic_matrix.r_23 = matrix[1][2]
-    self.extrinsic_matrix.r_31 = matrix[2][0]
-    self.extrinsic_matrix.r_32 = matrix[2][1]
-    self.extrinsic_matrix.r_33 = matrix[2][2]
-    self.extrinsic_matrix.tx = matrix[0][3]
-    self.extrinsic_matrix.ty = matrix[1][3]
-    self.extrinsic_matrix.tz = matrix[2][3]
-
-    self.extrinsic_matrix.extrinsic_matrix = matrix
-
-    return matrix
-
-  def loadDistortionMatrix(self, path):
-    matrix, rows, cols = self.loadYmlMatrix(path)
-
-    if (rows != 1 or cols != 5):
-      print "Distortion matrix has not shape 1x5, please check input file!"
-      return
-
-    self.distortion_matrix.k1 = matrix[0][0]
-    self.distortion_matrix.k2 = matrix[0][1]
-    self.distortion_matrix.p1 = matrix[0][2]
-    self.distortion_matrix.p2 = matrix[0][3]
-    self.distortion_matrix.k3 = matrix[0][4]
-
-    self.distortion_matrix.distortion_matrix = matrix
-
-    return matrix
-
-  def loadProjectionMatrix(self, path):
-    matrix, rows, cols = self.loadYmlMatrix(path)
-
-    if (rows != 3 or cols != 4):
-      print "Projection matrix has not shape 3x4, please check input file!"
-      return
-
-    self.projection_matrix.fx = matrix[0][0]
-    self.projection_matrix.fy = matrix[1][1]
-    self.projection_matrix.cx = matrix[0][2]
-    self.projection_matrix.cy = matrix[1][2]
-    self.projection_matrix.tx = matrix[0][3]
-    self.projection_matrix.ty = matrix[1][3]
-    self.projection_matrix.baseline = matrix[0][3] / (-1. * matrix[0][0])
-
-    self.projection_matrix.projection_matrix = matrix
-
-    return matrix
-
-  def loadRectificationMatrix(self, path):
-    matrix, rows, cols = self.loadYmlMatrix(path)
-
-    if (rows != 3 or cols != 3):
-      print "Rectification matrix has not shape 3x3, please check input file!"
-      return
-
-    self.rectification_matrix.r_11 = matrix[0][0]
-    self.rectification_matrix.r_12 = matrix[0][1]
-    self.rectification_matrix.r_13 = matrix[0][2]
-    self.rectification_matrix.r_21 = matrix[1][0]
-    self.rectification_matrix.r_22 = matrix[1][1]
-    self.rectification_matrix.r_23 = matrix[1][2]
-    self.rectification_matrix.r_31 = matrix[2][0]
-    self.rectification_matrix.r_32 = matrix[2][1]
-    self.rectification_matrix.r_33 = matrix[2][2]
-
-    self.rectification_matrix.rectification_matrix = matrix
-
-    return matrix
+      logging.exception('Opening DriveuDatabase from File: {} '
+                        'failed. File or Path incorrect.'.format(self.file_path))
 
 def parse_args():
 
@@ -465,19 +279,19 @@ def main(args):
   database = DriveuDatabase(args.label_file)
 
   calibration = CalibrationData()
-  intrinsic_left = calibration.loadIntrinsicMatrix(args.calib_dir + '/intrinsic_left.yml')
-  rectification_left = calibration.loadRectificationMatrix(args.calib_dir + '/rectification_left.yml')
-  projection_left = calibration.loadProjectionMatrix(args.calib_dir + '/projection_left.yml')
-  extrinsic = calibration.loadExtrinsicMatrix(args.calib_dir + '/extrinsic.yml')
-  distortion_left = calibration.loadDistortionMatrix(args.calib_dir + '/distortion_left.yml')
+  intrinsic_left = calibration.load_intrinsic_matrix(args.calib_dir + '/intrinsic_left.yml')
+  rectification_left = calibration.load_rectification_matrix(args.calib_dir + '/rectification_left.yml')
+  projection_left = calibration.load_projection_matrix(args.calib_dir + '/projection_left.yml')
+  extrinsic = calibration.load_extrinsic_matrix(args.calib_dir + '/extrinsic.yml')
+  distortion_left = calibration.load_distortion_matrix(args.calib_dir + '/distortion_left.yml')
 
   database.open(args.data_base_dir)
 
-  print "Intrinsic Matrix:\n\n" + str(intrinsic_left) + "\n"
-  print "Extrinsic Matrix:\n\n" + str(extrinsic) + "\n"
-  print "Projection Matrix:\n\n"  + str(projection_left) + "\n"
-  print "Rectification Matrix:\n\n" + str(rectification_left) + "\n"
-  print "Distortion Matrix:\n\n" + str(distortion_left) + "\n"
+  logging.info("Intrinsic Matrix: {}".format(intrinsic_left))
+  logging.info("Extrinsic Matrix:".format(extrinsic))
+  logging.info("Projection Matrix:".format(projection_left))
+  logging.info("Rectification Matrix:".format(rectification_left))
+  logging.info("Distortion Matrix:".format(distortion_left))
 
   for idx_d, img in enumerate(database.images):
 
