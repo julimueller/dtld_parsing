@@ -7,7 +7,8 @@ __email__ = "julian.mu.mueller@daimler.com"
 import yaml
 import numpy as np
 
-class IntrinsicCalibration():
+
+class IntrinsicCalibration:
     """
     Intrinsic calibration
 
@@ -18,11 +19,12 @@ class IntrinsicCalibration():
         cy(float):  principal point y
         intrinsic_matrix: Intrinsic camera matrix (opencv format)
     """
+
     def __init__(self):
-        self.fx = 0.
-        self.fy = 0.
-        self.cx = 0.
-        self.cy = 0.
+        self.fx = 0.0
+        self.fy = 0.0
+        self.cx = 0.0
+        self.cy = 0.0
         self.intrinsic_matrix = []
 
     def load_matrix(self, matrix):
@@ -40,7 +42,7 @@ class IntrinsicCalibration():
         self.intrinsic_matrix = matrix
 
 
-class ExtrinsicCalibration():
+class ExtrinsicCalibration:
     """
     Extrinsic Calibration from rear axis to left camera
 
@@ -49,19 +51,20 @@ class ExtrinsicCalibration():
         ti  Translation parts
         extrinsic_matrix: Extrinsic camera matrix
     """
+
     def __init__(self):
-        self.r_11 = 0.
-        self.r_12 = 0.
-        self.r_13 = 0.
-        self.r_21 = 0.
-        self.r_22 = 0.
-        self.r_23 = 0.
-        self.r_31 = 0.
-        self.r_32 = 0.
-        self.r_33 = 0.
-        self.tx = 0.
-        self.ty = 0.
-        self.tz = 0.
+        self.r_11 = 0.0
+        self.r_12 = 0.0
+        self.r_13 = 0.0
+        self.r_21 = 0.0
+        self.r_22 = 0.0
+        self.r_23 = 0.0
+        self.r_31 = 0.0
+        self.r_32 = 0.0
+        self.r_33 = 0.0
+        self.tx = 0.0
+        self.ty = 0.0
+        self.tz = 0.0
         self.extrinsic_matrix = []
 
     def load_matrix(self, matrix):
@@ -88,7 +91,7 @@ class ExtrinsicCalibration():
         self.extrinsic_matrix = matrix
 
 
-class RectificationMatrix():
+class RectificationMatrix:
     """
     Rectification matrix
 
@@ -96,16 +99,17 @@ class RectificationMatrix():
         r_i Rectification params
         rectification_matrix: Rectification matrix
     """
+
     def __init__(self):
-        self.r_11 = 0.
-        self.r_12 = 0.
-        self.r_13 = 0.
-        self.r_21 = 0.
-        self.r_22 = 0.
-        self.r_23 = 0.
-        self.r_31 = 0.
-        self.r_32 = 0.
-        self.r_33 = 0.
+        self.r_11 = 0.0
+        self.r_12 = 0.0
+        self.r_13 = 0.0
+        self.r_21 = 0.0
+        self.r_22 = 0.0
+        self.r_23 = 0.0
+        self.r_31 = 0.0
+        self.r_32 = 0.0
+        self.r_33 = 0.0
         self.rectification_matrix = []
 
     def load_matrix(self, matrix):
@@ -129,7 +133,7 @@ class RectificationMatrix():
         self.rectification_matrix = matrix
 
 
-class ProjectionMatrix():
+class ProjectionMatrix:
     """
     Projection matrix
 
@@ -143,14 +147,15 @@ class ProjectionMatrix():
         baseline(float): Baseline(stereo cam)
         projection_matrix: Projection matrix
     """
+
     def __init__(self):
-        self.fx = 0.
-        self.fy = 0.
-        self.cx = 0.
-        self.cy = 0.
-        self.tx = 0.
-        self.ty = 0.
-        self.baseline = 0.
+        self.fx = 0.0
+        self.fy = 0.0
+        self.cx = 0.0
+        self.cy = 0.0
+        self.tx = 0.0
+        self.ty = 0.0
+        self.baseline = 0.0
         self.projection_matrix = []
 
     def load_matrix(self, matrix):
@@ -167,12 +172,12 @@ class ProjectionMatrix():
         self.cy = matrix[1][2]
         self.tx = matrix[0][3]
         self.ty = matrix[1][3]
-        self.baseline = matrix[0][3] / (-1. * matrix[0][0])
+        self.baseline = matrix[0][3] / (-1.0 * matrix[0][0])
 
         self.projection_matrix = matrix
 
 
-class DistortionCalibration():
+class DistortionCalibration:
     """
     Distortion Calibration
 
@@ -180,12 +185,13 @@ class DistortionCalibration():
         k1,k2,k3 (float):  radial distortion
         p1, p2    tangential distortion
     """
+
     def __init__(self):
-        self.k1 = 0.
-        self.k2 = 0.
-        self.k3 = 0.
-        self.p1 = 0.
-        self.p2 = 0.
+        self.k1 = 0.0
+        self.k2 = 0.0
+        self.k3 = 0.0
+        self.p1 = 0.0
+        self.p2 = 0.0
         self.distortion_matrix = []
 
     def load_matrix(self, matrix):
@@ -205,7 +211,7 @@ class DistortionCalibration():
         self.distortion_matrix = matrix
 
 
-class CalibrationData():
+class CalibrationData:
     """
     Calibration class containing intrinsic, extrinsic, distortion,
     projection and rectification calibration
@@ -217,6 +223,7 @@ class CalibrationData():
         projection_matrix:      Projection matrix
         rectification_matrix:   Rectification matrix
     """
+
     def __init__(self):
         self.intrinsic_calibration = IntrinsicCalibration()
         self.extrinsic_calibration = ExtrinsicCalibration()
@@ -238,9 +245,9 @@ class CalibrationData():
         skip_lines = 2
         with open(path) as infile:
             for i in range(skip_lines):
-                _ = infile.readline()
+                infile.readline()
             data = yaml.load(infile)
-            matrix = np.reshape(data['data'], (data['rows'], data['cols']))
+            matrix = np.reshape(data["data"], (data["rows"], data["cols"]))
 
         return matrix
 

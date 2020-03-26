@@ -35,4 +35,3 @@ class VehicleData():
         self.yaw_rate = image_dict['yaw_rate']
         self.longitude = image_dict['longitude']
         self.latitude = image_dict['latitude']
-

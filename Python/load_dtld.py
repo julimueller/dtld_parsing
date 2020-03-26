@@ -4,44 +4,36 @@ __author__ = "Andreas Fregin, Julian Mueller and Klaus Dietmayer"
 __maintainer__ = "Julian Mueller"
 __email__ = "julian.mu.mueller@daimler.com"
 
-import cv2
-import yaml
-import numpy as np
-np.set_printoptions(suppress=True)
-import os.path
-import copy
-import time
 import argparse
 import logging
 import sys
 
-from calibration import (
-  IntrinsicCalibration,
-  ExtrinsicCalibration,
-  RectificationMatrix,
-  ProjectionMatrix,
-  DistortionCalibration,
-  CalibrationData
-)
+import numpy as np
+from calibration import CalibrationData
 
+import cv2
 from driveu_dataset import DriveuDatabase
+
+np.set_printoptions(suppress=True)
+
 
 # Logging
 logging.basicConfig(
     stream=sys.stdout,
     level=logging.INFO,
-    format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
+    format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: "
+    "%(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 
 def parse_args():
 
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--label_file', default='')
-  parser.add_argument('--calib_dir', default='')
-  parser.add_argument('--data_base_dir', default='')
-  return parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--label_file", default="")
+    parser.add_argument("--calib_dir", default="")
+    parser.add_argument("--data_base_dir", default="")
+    return parser.parse_args()
 
 
 def main(args):
@@ -52,11 +44,21 @@ def main(args):
 
     # Load calibration
     calibration = CalibrationData()
-    intrinsic_left = calibration.load_intrinsic_matrix(args.calib_dir + '/intrinsic_left.yml')
-    rectification_left = calibration.load_rectification_matrix(args.calib_dir + '/rectification_left.yml')
-    projection_left = calibration.load_projection_matrix(args.calib_dir + '/projection_left.yml')
-    extrinsic = calibration.load_extrinsic_matrix(args.calib_dir + '/extrinsic.yml')
-    distortion_left = calibration.load_distortion_matrix(args.calib_dir + '/distortion_left.yml')
+    intrinsic_left = calibration.load_intrinsic_matrix(
+        args.calib_dir + "/intrinsic_left.yml"
+    )
+    rectification_left = calibration.load_rectification_matrix(
+        args.calib_dir + "/rectification_left.yml"
+    )
+    projection_left = calibration.load_projection_matrix(
+        args.calib_dir + "/projection_left.yml"
+    )
+    extrinsic = calibration.load_extrinsic_matrix(
+        args.calib_dir + "/extrinsic.yml"
+    )
+    distortion_left = calibration.load_distortion_matrix(
+        args.calib_dir + "/distortion_left.yml"
+    )
 
     logging.info("Intrinsic Matrix:\n\n{}\n".format(intrinsic_left))
     logging.info("Extrinsic Matrix:\n\n{}\n".format(extrinsic))
@@ -71,7 +73,13 @@ def main(args):
         rects = img.map_labels_to_disparity_image(calibration)
         # Plot labels into disparity image
         for rect in rects:
-            cv2.rectangle(img_disp, (int(rect[0]), int(rect[1])), (int(rect[0]) + int(rect[2]), int(rect[1]) + int(rect[3])), (255,255,255), 2)
+            cv2.rectangle(
+                img_disp,
+                (int(rect[0]), int(rect[1])),
+                (int(rect[0]) + int(rect[2]), int(rect[1]) + int(rect[3])),
+                (255, 255, 255),
+                2,
+            )
         # Get color image with labels
         img_color = img.get_labeled_image()
         img_color = cv2.resize(img_color, (1024, 440))
@@ -80,7 +88,6 @@ def main(args):
         cv2.imshow("DTLD_visualized", img_concat)
         cv2.waitKey(1)
 
-if __name__ == '__main__':
-  main(parse_args())
 
-
+if __name__ == "__main__":
+    main(parse_args())
