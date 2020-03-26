@@ -9,10 +9,11 @@ import logging
 import sys
 
 import numpy as np
-from calibration import CalibrationData
+from dtld_parsing.calibration import CalibrationData
 
 import cv2
-from driveu_dataset import DriveuDatabase
+from dtld_parsing.driveu_dataset import DriveuDatabase
+import matplotlib.pyplot as plt
 
 np.set_printoptions(suppress=True)
 
@@ -66,6 +67,9 @@ def main(args):
     logging.info("Rectification Matrix:\n\n{}\n".format(rectification_left))
     logging.info("Distortion Matrix:\n\n{}\n".format(distortion_left))
 
+    # create axes
+    ax1 = plt.subplot(111)
+
     # Visualize image by image
     for idx_d, img in enumerate(database.images):
         # Get disparity image
@@ -85,8 +89,17 @@ def main(args):
         img_color = cv2.resize(img_color, (1024, 440))
         # Plot side by side
         img_concat = np.concatenate((img_color, img_disp), axis=1)
-        cv2.imshow("DTLD_visualized", img_concat)
-        cv2.waitKey(1)
+        # Because of the weird qt error in gui methods in opencv-python >= 3
+        # imshow does not work in some cases. You can try it by yourself.
+        # cv2.imshow("DTLD_visualized", img_concat)
+        # cv2.waitKey(1)
+        img_concat_rgb = img_concat[..., ::-1]
+        if idx_d == 0:
+            im1 = ax1.imshow(img_concat_rgb)
+        plt.ion()
+        im1.set_data(img_concat_rgb)
+        plt.pause(0.1)
+        plt.draw()
 
 
 if __name__ == "__main__":

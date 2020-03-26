@@ -11,8 +11,8 @@ import numpy as np
 import os
 import yaml
 
-from calibration import CalibrationData
-from vehicle_data import VehicleData
+from dtld_parsing.calibration import CalibrationData
+from dtld_parsing.vehicle_data import VehicleData
 
 
 class DriveuObject:
