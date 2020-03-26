@@ -1,12 +1,12 @@
 # The DriveU Traffic Light Dataset (DTLD): Introduction and Comparison with Existing Datasets
-This repository provides code for parsing the DriveU Traffic Light Dataset (DTLD), which is published in the course of our 2018 ICRA publication "The DriveU Traffic Light Dataset: Introduction and Comparison with Existing Datasets". 
+This repository provides code for parsing the DriveU Traffic Light Dataset (DTLD), which is published in the course of our 2018 ICRA publication "The DriveU Traffic Light Dataset: Introduction and Comparison with Existing Datasets".
 
 ## Paper
 Paper see https://ieeexplore.ieee.org/document/8460737.
 ## Download the dataset
-**INFO (11/27/2018): The Dataset is online now!** 
+**INFO (11/27/2018): The Dataset is online now!**
 
-The data can be downloaded from http://www.traffic-light-data.com/. 
+The data can be downloaded from http://www.traffic-light-data.com/.
 
     .
     ├── DTLD                 # DTLD
@@ -47,7 +47,7 @@ We separated each route into several sequences. One sequence describes one uniqu
         ├── 2015-04-17_10-50-05     # First intersection
         ├── 2015-04-17_10-50-41     # Second intersection
         ├── ...
-        
+
 ### Image structure
 For each sequences, images and disparity images are available. Filename indicates time and date
 
@@ -62,9 +62,9 @@ For each sequences, images and disparity images are available. Filename indicate
 #### 1. Check our documentation
 Documentation is stored at /dtld_parsing/doc/. We give insights into the data and explain how to interpret it.
 #### 2. Change absolute paths
-Do not forget to change the absolute paths of the images in all label files (.yml). 
+Do not forget to change the absolute paths of the images in all label files (.yml).
 
-## Using the dataset 
+## Using the dataset
 ### C++
 
 1. Clone the dtld_parsing respository
@@ -73,10 +73,10 @@ git clone https://github.com/julimueller/dtld_parsing
 ```
 2. Build everything
 ```Shell
-1. cd dtld_parsing/C++/driveu_dataset/
+1. cd dtld_parsing/c++/driveu_dataset/
 2. mkdir build && cd build
 3. cmake .. -DCMAKE_INSTALL_PREFIX="YOUR_PATH" && make -j12 install
-4. driveu_test -label_file <label_file_path.yml> -calib_dir <path_to_calib> -data_base_dir <dtld_dir> 
+4. driveu_test -label_file <label_file_path.yml> -calib_dir <path_to_calib> -data_base_dir <dtld_dir>
 
 ```
 Note: "YOUR_PATH" has to be in LD_LIBRARY_PATH. DTLD_DIR is the directory where all .zips should be unpacked.
@@ -84,10 +84,13 @@ The visualization should look like this
 
 ![alt text](https://github.com/julimueller/dtld_parsing/blob/master/images/c%2B%2B_demo.png)
 ### Python
+UPDATE 03-26-2020: Python modules were changed to Python 3.
 ```Shell
 git clone https://github.com/julimueller/dtld_parsing
-cd dtld_parsing/Python
-python load_dtld.py --label_file <label_file_path.yml> --calib_dir <path_to_calib> --data_base_dir <dtld_dir> 
+cd dtld_parsing
+python setup.py install
+cd python
+python3 load_dtld.py --label_file <label_file_path.yml> --calib_dir <path_to_calib> --data_base_dir <dtld_dir>
 
 ```
 Result should look like above
