@@ -88,7 +88,7 @@ UPDATE 03-26-2020: Python modules were changed to Python 3.
 ```Shell
 git clone https://github.com/julimueller/dtld_parsing
 cd dtld_parsing
-python setup.py install
+python3 setup.py install
 cd python
 python3 load_dtld.py --label_file <label_file_path.yml> --calib_dir <path_to_calib> --data_base_dir <dtld_dir>
 
