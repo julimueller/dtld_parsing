@@ -93,13 +93,10 @@ int main(int argc, char** argv) {
     for (size_t i = 0; i < database.m_images_.size(); ++i)
     {
 
-        cv::Mat imageMat, dispMat;
-        if (!database.m_images_[i].getLabeledImage(imageMat)) {
-            continue;
-        }
-        if(!database.m_images_[i].getDisparityImage(dispMat)) {
-            continue;
-        }
+        cv::Mat imageMat = database.m_images_[i].getLabeledImage();
+
+        cv::Mat dispMat = database.m_images_[i].getDisparityImage();
+
         cv::Mat dispMat_viz;
         dispMat.copyTo(dispMat_viz);
         database.m_images_[i].visualizeDisparityImage(dispMat_viz);
