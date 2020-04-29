@@ -54,7 +54,6 @@ void Decompand::lutFromKneepoints(const std::map<int,std::vector<int> > &kneepoi
             decompandLUT.push_back(decompanded);
         }
 
-        std::cout << "Decompanding section " << i << ": SRC " << src_min << " to " << src_max << " ---> DST: " << dst_min << " to " << decompanded << std::endl;
         src_min = src_max+1;
         dst_min = dst_max+1;
         i++;
