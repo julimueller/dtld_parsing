@@ -4,6 +4,7 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <driveu_dataset.h>
+#include <driveu_calibration.h>
 
 bool parseArgs(int argc, char **argv, std::string &label_file, std::string &calib_dir, std::string &data_base_dir) {
 
@@ -70,48 +71,40 @@ int main(int argc, char** argv) {
     }
 
     DriveuDatabase database;
-    CalibrationData calib_left, calib_right;
-
     database.open(label_file, data_base_dir);
 
-    calib_left.loadIntrinsicMatrix(calib_dir + "/intrinsic_left.yml");
-    calib_left.loadProjectionMatrix(calib_dir + "/projection_left.yml");
-    calib_left.loadDistortionMatrix(calib_dir +  + "/distortion_left.yml");
-    calib_left.loadRectificationMatrix(calib_dir + "/rectification_left.yml");
-    calib_left.loadExtrinsicMatrix(calib_dir + "/extrinsic.yml");
-    calib_right.loadProjectionMatrix(calib_dir + "/projection_right.yml");
+    CalibrationData calib(calib_dir + "/intrinsic_left.yml", calib_dir + "/extrinsic.yml", calib_dir + "/projection_left.yml", calib_dir +  + "/distortion_left.yml", calib_dir + "/rectification_left.yml");
 
+#ifdef OpenCV_FOUND
 
-    #ifdef OpenCV_FOUND
-    cv::Mat intrinsic_left = calib_left.getCvIntrinsicMatrix();
-    cv::Mat projection_left = calib_left.getCvProjectionMatrix();
-    cv::Mat distortion_left = calib_left.getCvDistortionMatrix();
-    cv::Mat rectification_left = calib_left.getCvRectificationMatrix();
-    cv::Mat projection_right = calib_right.getCvProjectionMatrix();
-    cv::Mat extrinsic = calib_left.getCvExtrinsicMatrix();
+    cv::Mat intrinsic_left = calib.getIntrinsicCvMatrix();
+    cv::Mat projection_left = calib.getProjectionCvMatrix();
+    cv::Mat distortion_left = calib.getDistortionCvMatrix();
+    cv::Mat rectification_left = calib.getRectificationCvMatrix();
+    cv::Mat extrinsic_left = calib.getExtrinsicCvMatrix();
 
     std::cout << "Left projection matrix :" << projection_left << std::endl;
-    std::cout << "Right projection matrix :" << projection_right << std::endl;
     std::cout << "Left intrinsic matrix: " << intrinsic_left << std::endl;
     std::cout << "Left distortion matrix: " << distortion_left << std::endl;
     std::cout << "Left rectification matrix: " << rectification_left << std::endl;
-    std::cout << "Extrinsic matrix (rear axis -> camera): " << extrinsic << std::endl;
+    std::cout << "Extrinsic matrix (rear axis -> camera): " << extrinsic_left << std::endl;
 
-
-    for (size_t i = 0; i < database.images.size(); ++i) {
+    std::cout << database.m_images_.size() << std::endl;
+    for (size_t i = 0; i < database.m_images_.size(); ++i)
+    {
 
         cv::Mat imageMat, dispMat;
-        if (!database.images[i].getLabeledImage(imageMat)) {
+        if (!database.m_images_[i].getLabeledImage(imageMat)) {
             continue;
         }
-        if(!database.images[i].getDisparityImage(dispMat)) {
+        if(!database.m_images_[i].getDisparityImage(dispMat)) {
             continue;
         }
         cv::Mat dispMat_viz;
         dispMat.copyTo(dispMat_viz);
-        database.images[i].visualizeDisparityImage(dispMat_viz);
+        database.m_images_[i].visualizeDisparityImage(dispMat_viz);
 
-        std::vector<cv::Rect> rects = database.images[i].mapLabelsToDisparityImage(calib_left);
+        std::vector<cv::Rect> rects = database.m_images_[i].mapLabelsToDisparityImage(calib);
 
         for (size_t i = 0; i < rects.size(); ++i) {
             cv::rectangle(dispMat_viz, rects[i] , cv::Scalar(255,255,255), 2);
@@ -127,25 +120,25 @@ int main(int argc, char** argv) {
 
         cv::imshow("DTLD images", im3);
         cv::waitKey(1);
-
-
     }
-    #endif
+#endif
 
-    #ifndef OpenCV_FOUND
-    std::vector<std::vector<float>> intrinsic, projection, distortion, rectification;
-    intrinsic = calib_left.getIntrinsicMatrix();
-    projection = calib_left.getProjectionMatrix();
-    distortion = calib_left.getDistortionMatrix();
-    rectification = calib_left.getRectificationMatrix();
-    
+    std::vector<std::vector<float>> intrinsic, projection, distortion, rectification, extrinsic;
+    intrinsic = calib.getIntrinsicMatrix();
+    projection = calib.getProjectionMatrix();
+    distortion = calib.getDistortionMatrix();
+    extrinsic = calib.getExtrinsicMatrix();
+    rectification = calib.getRectificationMatrix();
+
     // Display matrices
     for (size_t i = 0; i < rectification.size(); ++i) {
-        for (size_t j = 0; j < rectification[0].size(); ++j) {
-            std::cout << rectification[i][j] << std::endl;
+        std::cout << "[ ";
+        for (size_t j = 0; j < rectification[0].size(); ++j)
+        {
+            std::cout << rectification[i][j] << ", ";
         }
+        std::cout << "]" << std::endl;
     }
-    #endif
-    
+
 
 }
