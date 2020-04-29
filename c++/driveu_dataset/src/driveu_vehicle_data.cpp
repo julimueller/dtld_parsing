@@ -10,21 +10,21 @@ bool VehicleData::parseImageDict(const Json::Value &image_dict)
     return true;
 }
 
-double VehicleData::getVelocity()
+double VehicleData::getVelocity() const
 {
     return m_velocity_;
 }
 
-double VehicleData::getYawRate()
+double VehicleData::getYawRate() const
 {
     return m_yaw_rate_;
 }
 
-double VehicleData::getLongitude()
+double VehicleData::getLongitude() const
 {
     return m_longitude_;
 }
-double VehicleData::getLatitude()
+double VehicleData::getLatitude() const
 {
     return m_latitude_;
 }

@@ -31,20 +31,20 @@ public:
          * @brief   return velocity from current frame
          * @return  velocity in meters/second
          */
-    double getVelocity();
+    double getVelocity() const;
     /**
          * @brief   return yaw rate from current frame
          * @return  yaw rate in rad/s
          */
-    double getYawRate();
+    double getYawRate() const;
     /**
          * @brief   return longitude from current frame
          * @return  GPS longitude
          */
-    double getLongitude();
+    double getLongitude() const;
     /**
          * @brief   return latitude from current frame
          * @return GPS latitude
          */
-    double getLatitude();
+    double getLatitude() const;
 };
