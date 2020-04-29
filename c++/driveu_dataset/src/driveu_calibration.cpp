@@ -139,6 +139,18 @@ cv::Mat IntrinsicMatrix::loadCvMatrix()
 }
 #endif
 
+std::vector<std::vector<float>> CameraMatrix::getMat() const
+{
+    return m_matrix_;
+}
+
+#ifdef OpenCV_FOUND
+cv::Mat CameraMatrix::getCvMat() const
+{
+    return m_cv_matrix_;
+}
+#endif
+
 std::vector<std::vector<float>> IntrinsicMatrix::loadMatrix()
 {
     int rows, cols;
@@ -236,7 +248,7 @@ cv::Mat ProjectionMatrix::loadCvMatrix()
     m_cy_ = data_vec[6];
     m_tx_ = data_vec[3];
     m_ty_ = data_vec[7];
-    m_baseline_ = data_vec[3] /( -1. * data_vec[0]);
+    m_baseline_ = data_vec[3] / (-1. * data_vec[0]);
 
     std::cout << "Distortion matrix loaded!" << std::endl;
     return m_cv_matrix_;
@@ -264,7 +276,7 @@ std::vector<std::vector<float>> ProjectionMatrix::loadMatrix()
     m_cy_ = data_vec[6];
     m_tx_ = data_vec[3];
     m_ty_ = data_vec[7];
-    m_baseline_ = data_vec[3] /( -1. * data_vec[0]);
+    m_baseline_ = data_vec[3] / (-1. * data_vec[0]);
 
     std::cout << "Distortion matrix loaded!" << std::endl;
     return m_matrix_;
@@ -315,7 +327,6 @@ std::vector<std::vector<float>> RectificationMatrix::loadMatrix()
     }
 
     fillMat(m_matrix_, data_vec, rows, cols);
-
 
     m_r_11_ = data_vec[0];
     m_r_12_ = data_vec[1];
@@ -380,7 +391,6 @@ std::vector<std::vector<float>> ExtrinsicMatrix::loadMatrix()
 
     fillMat(m_matrix_, data_vec, rows, cols);
 
-
     m_r_11_ = data_vec[0];
     m_r_12_ = data_vec[1];
     m_r_13_ = data_vec[2];
@@ -398,5 +408,52 @@ std::vector<std::vector<float>> ExtrinsicMatrix::loadMatrix()
     return m_matrix_;
 }
 
+cv::Mat CalibrationData::getIntrinsicCvMatrix() const
+{
+    return m_intrinsic_matrix_.getCvMat();
+}
 
+cv::Mat CalibrationData::getExtrinsicCvMatrix() const
+{
+    return m_extrinsic_matrix_.getCvMat();
+}
 
+cv::Mat CalibrationData::getProjectionCvMatrix() const
+{
+    return m_projection_matrix_.getCvMat();
+}
+
+cv::Mat CalibrationData::getDistortionCvMatrix() const
+{
+    return m_distortion_matrix_.getCvMat();
+}
+
+cv::Mat CalibrationData::getRectificationCvMatrix() const
+{
+    return m_rectification_matrix_.getCvMat();
+}
+
+std::vector<std::vector<float>> CalibrationData::getIntrinsicMatrix() const
+{
+    return m_intrinsic_matrix_.getMat();
+}
+
+std::vector<std::vector<float>> CalibrationData::getExtrinsicMatrix() const
+{
+    return m_extrinsic_matrix_.getMat();
+}
+
+std::vector<std::vector<float>> CalibrationData::getProjectionMatrix() const
+{
+    return m_projection_matrix_.getMat();
+}
+
+std::vector<std::vector<float>> CalibrationData::getDistortionMatrix() const
+{
+    return m_distortion_matrix_.getMat();
+}
+
+std::vector<std::vector<float>> CalibrationData::getRectificationMatrix() const
+{
+    return m_rectification_matrix_.getMat();
+}

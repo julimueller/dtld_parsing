@@ -13,6 +13,19 @@ class CameraMatrix
 {
 public:
     CameraMatrix(const std::string &file_path) : m_camera_matrix_file_path_(file_path){};
+    /**
+     * @brief   Method which returns the respective camera matrix
+     * @return  Matrix as vector of vector
+     */
+    std::vector<std::vector<float>> getMat() const;
+
+#ifdef OpenCV_FOUND
+    /**
+     * @brief   Method which returns the respective camera matrix
+     * @return  Matrix as cv mat
+     */
+    cv::Mat getCvMat() const;
+#endif
 
 protected:
 #ifdef OpenCV_FOUND
@@ -42,6 +55,14 @@ protected:
     bool fillMat(std::vector<std::vector<float>> &mat, const std::vector<float> &vec, const int rows, const int cols);
 
 #ifdef OpenCV_FOUND
+    /**
+     * @brief       Fills cv mat from vector of float
+     * @param mat   Cv mat to be filled
+     * @param vec   Data Vector to be transformed
+     * @param rows  Number of rows of matrix
+     * @param cols  Number of cols of matrix
+     * @returns     Success
+     */
     bool fillCvMat(cv::Mat &mat, const std::vector<float> &vec, const int rows, const int cols);
 #endif
 };
@@ -175,6 +196,47 @@ public:
     cv::Mat loadCvMatrix();
 #endif
     std::vector<std::vector<float>> loadMatrix();
+};
+
+class CalibrationData
+{
+private:
+    IntrinsicMatrix m_intrinsic_matrix_;
+    ExtrinsicMatrix m_extrinsic_matrix_;
+    ProjectionMatrix m_projection_matrix_;
+    DistortionMatrix m_distortion_matrix_;
+    RectificationMatrix m_rectification_matrix_;
+
+public:
+    CalibrationData(const std::string &intrinsic_file_path, const std::string &extrinsic_file_path, const std::string &projection_file_path, const std::string &distortion_file_path, const std::string &rectification_file_path) : m_intrinsic_matrix_(intrinsic_file_path), m_extrinsic_matrix_(extrinsic_file_path), m_projection_matrix_(projection_file_path), m_distortion_matrix_(distortion_file_path), m_rectification_matrix_(rectification_file_path)
+    {
+#ifdef OpenCV_FOUND
+        m_intrinsic_matrix_.loadCvMatrix();
+        m_extrinsic_matrix_.loadCvMatrix();
+        m_projection_matrix_.loadCvMatrix();
+        m_distortion_matrix_.loadCvMatrix();
+        m_rectification_matrix_.loadCvMatrix();
+#endif
+        m_intrinsic_matrix_.loadMatrix();
+        m_extrinsic_matrix_.loadMatrix();
+        m_projection_matrix_.loadMatrix();
+        m_distortion_matrix_.loadMatrix();
+        m_rectification_matrix_.loadMatrix();
+    };
+
+#ifdef OpenCV_FOUND
+    cv::Mat getIntrinsicCvMatrix() const;
+    cv::Mat getExtrinsicCvMatrix() const;
+    cv::Mat getProjectionCvMatrix() const;
+    cv::Mat getDistortionCvMatrix() const;
+    cv::Mat getRectificationCvMatrix() const;
+#endif
+
+    std::vector<std::vector<float>> getIntrinsicMatrix() const;
+    std::vector<std::vector<float>> getExtrinsicMatrix() const;
+    std::vector<std::vector<float>> getProjectionMatrix() const;
+    std::vector<std::vector<float>> getDistortionMatrix() const;
+    std::vector<std::vector<float>> getRectificationMatrix() const;
 };
 
 #endif //DRIVEU_DATASET_DRIVEU_CALIBRATION_H
