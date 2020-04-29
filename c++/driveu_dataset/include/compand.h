@@ -1,7 +1,6 @@
-#ifndef COMPAND_H_
-#define COMPAND_H_
+#ifndef DRIVEU_DATASET_COMPAND_H_
+#define DRIVEU_DATASET_COMPAND_H_
 
-// 2015-07-04 A.Fregin
 
 #include <vector>
 #include <string>
@@ -45,4 +44,4 @@ private:
 
 };
 
-#endif // COMPAND_H_
+#endif // DRIVEU_DATASET_COMPAND_H_
