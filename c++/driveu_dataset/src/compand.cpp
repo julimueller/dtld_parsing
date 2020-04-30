@@ -3,29 +3,33 @@
 #include <fstream>
 #include <sstream>
 
-Decompand::Decompand() { }
+Decompand::Decompand() {}
 
-Decompand::Decompand(const std::map<int,std::vector<int> > &kneepoints) {
+Decompand::Decompand(const std::map<int, std::vector<int>> &kneepoints)
+{
     lutFromKneepoints(kneepoints);
 }
 
-Decompand::Decompand(const std::string &file) {
+Decompand::Decompand(const std::string &file)
+{
 
-    std::map<int,std::vector<int> > kneepoints;
-    if (loadKneepoints(file, kneepoints) == false) {
+    std::map<int, std::vector<int>> kneepoints;
+    if (loadKneepoints(file, kneepoints) == false)
+    {
         return;
     }
 
     lutFromKneepoints(kneepoints);
 }
 
-Decompand::~Decompand() { }
+Decompand::~Decompand() {}
 
-
-void Decompand::lutFromKneepoints(const std::map<int,std::vector<int> > &kneepoints) {
+void Decompand::lutFromKneepoints(const std::map<int, std::vector<int>> &kneepoints)
+{
 
     // check valid
-    if (kneepoints.empty()) {
+    if (kneepoints.empty())
+    {
         return;
     }
 
@@ -36,61 +40,73 @@ void Decompand::lutFromKneepoints(const std::map<int,std::vector<int> > &kneepoi
 
     // reserve memory
     decompandLUT.clear();
-    const int & max_in = (--kneepoints.end())->first;
+    const int &max_in = (--kneepoints.end())->first;
     decompandLUT.reserve(max_in);
 
     int i = 1;
-    for (std::map<int,std::vector<int> >::const_iterator p = kneepoints.begin(); p!=kneepoints.end(); ++p) {
+    for (std::map<int, std::vector<int>>::const_iterator p = kneepoints.begin(); p != kneepoints.end(); ++p)
+    {
 
-        const int& src_max = p->first;
-        const int& dst_max = (p->second)[0];
-        const int& compression = (p->second)[1];
+        const int &src_max = p->first;
+        const int &dst_max = (p->second)[0];
+        const int &compression = (p->second)[1];
 
-        for (int src = src_min; src <= src_max; ++src) {
+        for (int src = src_min; src <= src_max; ++src)
+        {
             decompanded = (((src - src_min) * compression) + dst_min);
-            if (decompanded > dst_max) {
+            if (decompanded > dst_max)
+            {
                 decompanded = dst_max;
             }
             decompandLUT.push_back(decompanded);
         }
 
-        src_min = src_max+1;
-        dst_min = dst_max+1;
+        src_min = src_max + 1;
+        dst_min = dst_max + 1;
         i++;
     }
 }
 
-void Decompand::processPixel(const ushort &src, ushort &dst) {
-  dst = decompandLUT[src];
+void Decompand::processPixel(const ushort &src, ushort &dst)
+{
+    dst = decompandLUT[src];
 }
 
-void Decompand::processPixel(const ushort &src, unsigned char &dst) {
-  dst = decompandLUT[src];
+void Decompand::processPixel(const ushort &src, unsigned char &dst)
+{
+    dst = decompandLUT[src];
 }
 
-bool Decompand::saveLut(const std::string &file) {
+bool Decompand::saveLut(const std::string &file)
+{
 
     std::ofstream outfile(file);
-    if( outfile.is_open() ){
+    if (outfile.is_open())
+    {
         outfile << "# Y\t X" << std::endl;
 
-        for(std::vector<int>::size_type i = 0; i != decompandLUT.size(); i++) {
+        for (std::vector<int>::size_type i = 0; i != decompandLUT.size(); i++)
+        {
             outfile << i << " \t " << decompandLUT[i] << std::endl;
         }
         outfile.close();
         return true;
-    } else{
+    }
+    else
+    {
         std::cout << "Unable to open file: " << file << std::endl;
         return false;
     }
 }
 
-bool Decompand::loadKneepoints(const std::string &file, std::map<int, std::vector<int> > &kneepoints) {
+bool Decompand::loadKneepoints(const std::string &file, std::map<int, std::vector<int>> &kneepoints)
+{
 
     // open file
     std::ifstream f;
     f.open(file, std::ios_base::in);
-    if (!f.is_open()) {
+    if (!f.is_open())
+    {
         std::cout << "ERROR while opening decompandig LUT file '" << file << "'!" << std::endl;
         return false;
     }
@@ -104,8 +120,10 @@ bool Decompand::loadKneepoints(const std::string &file, std::map<int, std::vecto
     int compression = 0;
 
     // parse file
-    while (std::getline(f, line)){
-        if (!((line.empty()) || (line[0] == '#'))) {
+    while (std::getline(f, line))
+    {
+        if (!((line.empty()) || (line[0] == '#')))
+        {
             std::stringstream points;
             points << line;
 
@@ -113,27 +131,30 @@ bool Decompand::loadKneepoints(const std::string &file, std::map<int, std::vecto
             points >> x2 >> y2;
 
             // check out of range
-            if ((x2 > std::numeric_limits<unsigned short>::max()) || (y2 > std::numeric_limits<unsigned short>::max())) {
+            if ((x2 > std::numeric_limits<unsigned short>::max()) || (y2 > std::numeric_limits<unsigned short>::max()))
+            {
                 std::cout << "ERROR while parsing decompandig LUT '" << file << "' (line: " << line_cnt << "). - Kneepoint exceeding unsigned short range (>65535)!" << std::endl;
                 return false;
             }
 
-
             // checks division by zero and kneepoint order
-            if ((x2-x1) <= 0) {
+            if ((x2 - x1) <= 0)
+            {
                 std::cout << "ERROR while parsing decompandig LUT '" << file << "' (line: " << line_cnt << "). - A Kneepoint has to have a higher x-value than its precessor!" << std::endl;
                 return false;
             }
 
             // check compression ratio (has to be integer)
-            if ((y2-y1)%(x2-x1)){
-                std::cout << "ERROR while parsing decompanding LUT '" << file << "' (line: " << line_cnt << "). -  Decompanding compression not of type integer. Change kneepoints accordingly.\n" << std::endl;
+            if ((y2 - y1) % (x2 - x1))
+            {
+                std::cout << "ERROR while parsing decompanding LUT '" << file << "' (line: " << line_cnt << "). -  Decompanding compression not of type integer. Change kneepoints accordingly.\n"
+                          << std::endl;
                 return false;
             }
 
             // calculate compression and save kneepoint
-            compression = (y2-y1)/(x2-x1);
-            kneepoints[x2] = {y2,compression};
+            compression = (y2 - y1) / (x2 - x1);
+            kneepoints[x2] = {y2, compression};
 
             //std::cout << "Kneepoint " << kneepoints.size() << ": " << x1 << ".." << x2 << ", compression: " << compression << " | mapped to: " << y1 << ".." << y2 << std::endl;
 
@@ -146,23 +167,24 @@ bool Decompand::loadKneepoints(const std::string &file, std::map<int, std::vecto
     return true;
 }
 
-
-
 //=======================================================================================================
 
-
-
-Compand::Compand(const std::map<int,std::vector<int> > &kneepoints, bool verbose) {
+Compand::Compand(const std::map<int, std::vector<int>> &kneepoints, bool verbose)
+{
 
     // COMPANDING
     compandLUT.clear();
 
-    for (std::map<int,std::vector<int> >::const_iterator p = kneepoints.begin(); p!=kneepoints.end(); ++p) {
+    for (std::map<int, std::vector<int>>::const_iterator p = kneepoints.begin(); p != kneepoints.end(); ++p)
+    {
         // Check for ushort overflow and non-negativity of kneepoints
-        if (p->first > 65535 || p->second[0] > 65535 ){
+        if (p->first > 65535 || p->second[0] > 65535)
+        {
             std::cout << "ERROR in compand.cpp: At least one decompanding kneepoint exceeds (16bit) unsigned short range (>65535). Adapt kneepoints!" << std::endl;
             return;
-        } else if (p->first < 0 || p->second[0] < 0){
+        }
+        else if (p->first < 0 || p->second[0] < 0)
+        {
             std::cout << "ERROR in compand.cpp: Kneepoints are not allowed to be negative, at least one kneepoint is negative. Adapt kneepoints!" << std::endl;
             return;
         }
@@ -171,54 +193,63 @@ Compand::Compand(const std::map<int,std::vector<int> > &kneepoints, bool verbose
     int compSrcMin = 0;
     int compDstMin = 0;
     int i = 1;
-    for (std::map<int,std::vector<int> >::const_iterator p = kneepoints.begin(); p!=kneepoints.end(); ++p) {
+    for (std::map<int, std::vector<int>>::const_iterator p = kneepoints.begin(); p != kneepoints.end(); ++p)
+    {
         int compSrcMax = (p->second)[0];
         int compDstMax = p->first;
         int compression = (p->second)[1];
 
-        if (verbose) {
+        if (verbose)
+        {
             std::cout << "Companding section " << i << ": SRC " << compSrcMin << " to " << compSrcMax << " ---> DST: " << compDstMin << " to " << compDstMax << std::endl;
         }
 
-        for (int src = compSrcMin; src <= compSrcMax; src++) {
-            compandLUT.push_back( ((src-compSrcMin)/compression) + compDstMin);
+        for (int src = compSrcMin; src <= compSrcMax; src++)
+        {
+            compandLUT.push_back(((src - compSrcMin) / compression) + compDstMin);
         }
 
-        compSrcMin = compSrcMax+1;
-        compDstMin = compDstMax+1;
+        compSrcMin = compSrcMax + 1;
+        compDstMin = compDstMax + 1;
         i++;
     }
-    if (verbose) {
+    if (verbose)
+    {
         std::cout << "Created a compandingLUT with " << compandLUT.size() << " elements." << std::endl;
     }
 }
 
-Compand::~Compand() { }
+Compand::~Compand() {}
 
-
-void Compand::processPixel(const ushort &src, ushort &dst) {
+void Compand::processPixel(const ushort &src, ushort &dst)
+{
     dst = compandLUT[src];
 }
 
-bool Compand::saveLut(const std::string &file) {
+bool Compand::saveLut(const std::string &file)
+{
 
     std::ofstream outfile(file);
-    if( outfile.is_open() ){
+    if (outfile.is_open())
+    {
         outfile << "# X\t Y" << std::endl;
 
-        for(std::vector<int>::size_type i = 0; i != compandLUT.size(); i++) {
+        for (std::vector<int>::size_type i = 0; i != compandLUT.size(); i++)
+        {
             outfile << i << " \t " << compandLUT[i] << std::endl;
         }
         outfile.close();
         return true;
-    } else{
+    }
+    else
+    {
         std::cout << "Unable to open file: " << file << std::endl;
         return false;
     }
 }
 
-bool Compand::loadLut(const std::string &file) {
-
+bool Compand::loadLut(const std::string &file)
+{
 
     return true;
 }

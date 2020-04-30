@@ -7,31 +7,37 @@
 #include "driveu_calibration.h"
 #include "compand.h"
 
-bool parseArgs(int argc, char **argv, std::string &label_file, std::string &calib_dir, std::string &data_base_dir) {
+bool parseArgs(int argc, char **argv, std::string &label_file, std::string &calib_dir, std::string &data_base_dir)
+{
 
     label_file = "";
     calib_dir = "";
     data_base_dir = "";
 
-    for (int i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; i++)
+    {
 
-        if ((std::string(argv[i]) == "-label_file") && (i+1 < argc)) {
+        if ((std::string(argv[i]) == "-label_file") && (i + 1 < argc))
+        {
             label_file = std::stringstream(argv[i + 1]).str();
             continue;
         }
 
-        if ((std::string(argv[i]) == "-calib_dir") && (i+1 < argc)) {
+        if ((std::string(argv[i]) == "-calib_dir") && (i + 1 < argc))
+        {
             calib_dir = std::stringstream(argv[i + 1]).str();
             continue;
         }
 
-        if ((std::string(argv[i]) == "-data_base_dir") && (i+1 < argc)) {
+        if ((std::string(argv[i]) == "-data_base_dir") && (i + 1 < argc))
+        {
             data_base_dir = std::stringstream(argv[i + 1]).str();
             continue;
         }
     }
 
-    if (label_file == "" || calib_dir == "") {
+    if (label_file == "" || calib_dir == "")
+    {
         std::cout << std::endl;
         std::cout << "=======================================================================================" << std::endl;
         std::cout << "\t\t\t      DRIVEU TEST PARAMETERS" << std::endl;
@@ -45,7 +51,8 @@ bool parseArgs(int argc, char **argv, std::string &label_file, std::string &cali
         std::cout << std::endl;
         return false;
     }
-    else {
+    else
+    {
         std::cout << std::endl;
         std::cout << "=======================================================================================" << std::endl;
         std::cout << "\t\t\t      DRIVEU TEST PARAMETERS" << std::endl;
@@ -63,12 +70,14 @@ bool parseArgs(int argc, char **argv, std::string &label_file, std::string &cali
     }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
 
     std::string label_file, calib_dir, data_base_dir;
 
     // parse arguments
-    if (!parseArgs(argc, argv, label_file, calib_dir, data_base_dir)) {
+    if (!parseArgs(argc, argv, label_file, calib_dir, data_base_dir))
+    {
         return 0;
     }
 
@@ -83,7 +92,7 @@ int main(int argc, char** argv) {
     const std::string distortion_matrix_file_path = calib_dir + +"/distortion_left.yml";
     const std::string rectification_matrix_file_path = calib_dir + "/rectification_left.yml";
 
-    CalibrationData calib(intrinsic_matrix_file_path, extrinsic_matrix_file_path , projection_matrix_file_path, distortion_matrix_file_path, rectification_matrix_file_path );
+    CalibrationData calib(intrinsic_matrix_file_path, extrinsic_matrix_file_path, projection_matrix_file_path, distortion_matrix_file_path, rectification_matrix_file_path);
 
 #ifdef OpenCV_FOUND
 
@@ -94,11 +103,16 @@ int main(int argc, char** argv) {
     cv::Mat rectification_left = calib.getRectificationCvMatrix();
     cv::Mat extrinsic_left = calib.getExtrinsicCvMatrix();
 
-    std::cout << "\nLeft projection matrix:\n" << projection_left << std::endl;
-    std::cout << "\nLeft intrinsic matrix:\n" << intrinsic_left << std::endl;
-    std::cout << "\nLeft distortion matrix:\n" << distortion_left << std::endl;
-    std::cout << "\nLeft rectification matrix:\n" << rectification_left << std::endl;
-    std::cout << "\nExtrinsic matrix (rear axis -> camera):\n" << extrinsic_left << std::endl;
+    std::cout << "\nLeft projection matrix:\n"
+              << projection_left << std::endl;
+    std::cout << "\nLeft intrinsic matrix:\n"
+              << intrinsic_left << std::endl;
+    std::cout << "\nLeft distortion matrix:\n"
+              << distortion_left << std::endl;
+    std::cout << "\nLeft rectification matrix:\n"
+              << rectification_left << std::endl;
+    std::cout << "\nExtrinsic matrix (rear axis -> camera):\n"
+              << extrinsic_left << std::endl;
 
     // load decompanding instance if desired to get images in 16 bit
     std::map<int, std::vector<int>> map;
@@ -123,13 +137,14 @@ int main(int argc, char** argv) {
 
         std::vector<cv::Rect> rects = database.m_images_[i].mapLabelsToDisparityImage(calib);
 
-        for (size_t i = 0; i < rects.size(); ++i) {
-            cv::rectangle(dispMat_viz, rects[i] , cv::Scalar(255,255,255), 2);
+        for (size_t i = 0; i < rects.size(); ++i)
+        {
+            cv::rectangle(dispMat_viz, rects[i], cv::Scalar(255, 255, 255), 2);
         }
 
         cv::resize(imageMat, imageMat, cv::Size(dispMat_viz.cols, dispMat_viz.rows));
 
-        cv::Mat im3(imageMat.rows, imageMat.cols+ dispMat_viz.cols, CV_8UC3);
+        cv::Mat im3(imageMat.rows, imageMat.cols + dispMat_viz.cols, CV_8UC3);
         cv::Mat left(im3, cv::Rect(0, 0, imageMat.cols, imageMat.rows));
         imageMat.copyTo(left);
         cv::Mat right(im3, cv::Rect(imageMat.cols, 0, imageMat.cols, imageMat.rows));
@@ -149,7 +164,8 @@ int main(int argc, char** argv) {
     rectification = calib.getRectificationMatrix();
 
     // Display matrices
-    for (size_t i = 0; i < rectification.size(); ++i) {
+    for (size_t i = 0; i < rectification.size(); ++i)
+    {
         std::cout << "[ ";
         for (size_t j = 0; j < rectification[0].size(); ++j)
         {
@@ -157,6 +173,4 @@ int main(int argc, char** argv) {
         }
         std::cout << "]" << std::endl;
     }
-
-
 }
