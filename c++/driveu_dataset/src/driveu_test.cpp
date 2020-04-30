@@ -83,7 +83,9 @@ int main(int argc, char **argv)
 
     // load database
     DriveuDatabase database;
-    database.open(label_file, data_base_dir);
+    if (!database.open(label_file, data_base_dir)) {
+        return false;
+    }
 
     // load calibration
     const std::string intrinsic_matrix_file_path = calib_dir + "/intrinsic_left.yml";

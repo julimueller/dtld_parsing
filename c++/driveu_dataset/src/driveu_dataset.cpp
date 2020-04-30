@@ -196,7 +196,24 @@ bool DriveuDatabase::open(const std::string &path, const std::string &base_path)
     DriveuObject object;
     Json::Value root;
     Json::CharReaderBuilder builder;
-    std::ifstream db(path, std::ifstream::binary);
+    const std::string extension = path.substr(path.rfind('.') + 1);
+    std::ifstream db;
+    // check extension
+    if (extension == "json")
+    {
+        db = std::ifstream(path, std::ifstream::binary);
+    }
+    // check v1 format
+    else if (extension == "yml")
+    {
+        std::cerr << "Yaml files are deprecated. Either use the new .json files or use <git checkout v1.0> to jump back to yml support" << std::endl;
+        return false;
+    }
+    else
+    {
+        std::cerr << "Label file with extension " << extension << " is not supported. Use .json instead!" << std::endl;
+        return false;
+    }
     std::string errs;
     bool ok = Json::parseFromStream(builder, db, &root, &errs);
     if (!ok)
