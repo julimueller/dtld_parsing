@@ -53,7 +53,8 @@ def main(args):
 
     # Load database
     database = DriveuDatabase(args.label_file)
-    database.open(args.data_base_dir)
+    if not database.open(args.data_base_dir):
+        return False
 
     # Load calibration
     calibration = CalibrationData()
