@@ -3,8 +3,9 @@
 #include <string>
 #include <vector>
 #include <opencv2/opencv.hpp>
-#include <driveu_dataset.h>
-#include <driveu_calibration.h>
+#include "driveu_dataset.h"
+#include "driveu_calibration.h"
+#include "compand.h"
 
 bool parseArgs(int argc, char **argv, std::string &label_file, std::string &calib_dir, std::string &data_base_dir) {
 
@@ -51,9 +52,9 @@ bool parseArgs(int argc, char **argv, std::string &label_file, std::string &cali
         std::cout << "=======================================================================================" << std::endl;
         std::cout << std::endl;
 
-        std::cout << "Label File:\t" << label_file << std::endl;
-        std::cout << "Calibration Dir:\t\t" << calib_dir << std::endl;
-        std::cout << "Data Dir:\t\t" << data_base_dir << std::endl;
+        std::cout << "Label File:\t\t" << label_file << std::endl;
+        std::cout << "Calibration Dir:\t" << calib_dir << std::endl;
+        std::cout << "Data Base Dir:\t\t" << data_base_dir << std::endl;
         std::cout << std::endl;
         std::cout << "=======================================================================================" << std::endl;
         std::cout << "=======================================================================================" << std::endl;
@@ -66,34 +67,53 @@ int main(int argc, char** argv) {
 
     std::string label_file, calib_dir, data_base_dir;
 
+    // parse arguments
     if (!parseArgs(argc, argv, label_file, calib_dir, data_base_dir)) {
         return 0;
     }
 
+    // load database
     DriveuDatabase database;
     database.open(label_file, data_base_dir);
 
-    CalibrationData calib(calib_dir + "/intrinsic_left.yml", calib_dir + "/extrinsic.yml", calib_dir + "/projection_left.yml", calib_dir +  + "/distortion_left.yml", calib_dir + "/rectification_left.yml");
+    // load calibration
+    const std::string intrinsic_matrix_file_path = calib_dir + "/intrinsic_left.yml";
+    const std::string extrinsic_matrix_file_path = calib_dir + "/extrinsic.yml";
+    const std::string projection_matrix_file_path = calib_dir + "/projection_left.yml";
+    const std::string distortion_matrix_file_path = calib_dir + +"/distortion_left.yml";
+    const std::string rectification_matrix_file_path = calib_dir + "/rectification_left.yml";
+
+    CalibrationData calib(intrinsic_matrix_file_path, extrinsic_matrix_file_path , projection_matrix_file_path, distortion_matrix_file_path, rectification_matrix_file_path );
 
 #ifdef OpenCV_FOUND
 
+    // get calibration matrices
     cv::Mat intrinsic_left = calib.getIntrinsicCvMatrix();
     cv::Mat projection_left = calib.getProjectionCvMatrix();
     cv::Mat distortion_left = calib.getDistortionCvMatrix();
     cv::Mat rectification_left = calib.getRectificationCvMatrix();
     cv::Mat extrinsic_left = calib.getExtrinsicCvMatrix();
 
-    std::cout << "Left projection matrix :" << projection_left << std::endl;
-    std::cout << "Left intrinsic matrix: " << intrinsic_left << std::endl;
-    std::cout << "Left distortion matrix: " << distortion_left << std::endl;
-    std::cout << "Left rectification matrix: " << rectification_left << std::endl;
-    std::cout << "Extrinsic matrix (rear axis -> camera): " << extrinsic_left << std::endl;
+    std::cout << "\nLeft projection matrix:\n" << projection_left << std::endl;
+    std::cout << "\nLeft intrinsic matrix:\n" << intrinsic_left << std::endl;
+    std::cout << "\nLeft distortion matrix:\n" << distortion_left << std::endl;
+    std::cout << "\nLeft rectification matrix:\n" << rectification_left << std::endl;
+    std::cout << "\nExtrinsic matrix (rear axis -> camera):\n" << extrinsic_left << std::endl;
 
-    std::cout << database.m_images_.size() << std::endl;
+    // load decompanding instance if desired to get images in 16 bit
+    std::map<int, std::vector<int>> map;
+    map[1023] = {1023, 1};
+    map[2559] = {4095, 2};
+    map[3455] = {32767, 32};
+    map[3967] = {65535, 64};
+    Decompand decompand(map);
+
+    // show all images
     for (size_t i = 0; i < database.m_images_.size(); ++i)
     {
 
         cv::Mat imageMat = database.m_images_[i].getLabeledImage();
+        cv::Mat imageMat16 = database.m_images_[i].getImage16Bit(decompand);
 
         cv::Mat dispMat = database.m_images_[i].getDisparityImage();
 
@@ -120,6 +140,7 @@ int main(int argc, char** argv) {
     }
 #endif
 
+    // Non-OpenCV Matrices.
     std::vector<std::vector<float>> intrinsic, projection, distortion, rectification, extrinsic;
     intrinsic = calib.getIntrinsicMatrix();
     projection = calib.getProjectionMatrix();
