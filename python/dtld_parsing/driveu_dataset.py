@@ -310,15 +310,24 @@ class DriveuDatabase:
         """
 
         if os.path.exists(self.file_path) is not None:
-            logging.info("Opening DriveuDatabase from file: {}"
-                         .format(self.file_path))
-            with open(self.file_path, "r") as fp:
-                images = json.load(fp)
+            label_file_extension = os.path.splitext(self.file_path)[1]
+            if label_file_extension == ".json":
+                logging.info("Opening DriveuDatabase from file: {}"
+                            .format(self.file_path))
+                with open(self.file_path, "r") as fp:
+                    images = json.load(fp)
+            elif label_file_extension == ".yml":
+                logging.exception("Yaml support is deprecated. Either use the new .json label files (from download URL received after registration) or checkout <git checkout v1.0> to parse yaml")
+                sys.exit(1)
+            else:
+                logging.exception("Label file with extension {} not supported. Please use json!".format(label_file_extension))
+                sys.exit(1)
         else:
             logging.exception(
                 "Opening DriveuDatabase from File: {} "
                 "failed. File or Path incorrect.".format(self.file_path)
             )
+            sys.exit(1)
 
         for image_dict in images["images"]:
             # parse and store image
