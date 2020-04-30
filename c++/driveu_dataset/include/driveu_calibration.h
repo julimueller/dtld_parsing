@@ -1,5 +1,5 @@
-#ifndef DRIVEU_DATASET_DRIVEU_CALIBRATION_H
-#define DRIVEU_DATASET_DRIVEU_CALIBRATION_H
+#ifndef DRIVEU_DATASET_DRIVEU_CALIBRATION_H_
+#define DRIVEU_DATASET_DRIVEU_CALIBRATION_H_
 
 #include <string>
 #include <vector>
@@ -239,4 +239,4 @@ public:
     std::vector<std::vector<float>> getRectificationMatrix() const;
 };
 
-#endif //DRIVEU_DATASET_DRIVEU_CALIBRATION_H
+#endif //DRIVEU_DATASET_DRIVEU_CALIBRATION_H_

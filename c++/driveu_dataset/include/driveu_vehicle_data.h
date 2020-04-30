@@ -1,3 +1,6 @@
+#ifndef DRIVEU_DATASET_DRIVEU_VEHICLE_DATA_H_
+#define DRIVEU_DATASET_DRIVEU_VEHICLE_DATA_H_
+
 #include <jsoncpp/json/json.h>
 
 class VehicleData
@@ -48,3 +51,5 @@ public:
          */
     double getLatitude() const;
 };
+
+#endif // DRIVEU_DATASET_DRIVEU_VEHICLE_DATA_H_

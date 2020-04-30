@@ -1,3 +1,6 @@
+#ifndef DRIVEU_DATASET_DRIVEU_DATASET_H_
+#define DRIVEU_DATASET_DRIVEU_DATASET_H_
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -161,3 +164,5 @@ public:
      * */
     bool open(const std::string &path, const std::string &base_path);
 };
+
+#endif //DRIVEU_DATASET_DRIVEU_DATASET_H
