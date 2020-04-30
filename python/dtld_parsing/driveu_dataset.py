@@ -1,18 +1,25 @@
 from __future__ import print_function
 
+import copy
+import json
+import logging
+import os
+import sys
+
+import numpy as np
+
+import cv2
+from dtld_parsing.calibration import CalibrationData
+from dtld_parsing.vehicle_data import VehicleData
+
 __author__ = "Andreas Fregin, Julian Mueller and Klaus Dietmayer"
 __maintainer__ = "Julian Mueller"
 __email__ = "julian.mu.mueller@daimler.com"
 
-import copy
-import cv2
-import logging
-import numpy as np
-import os
-import yaml
-
-from dtld_parsing.calibration import CalibrationData
-from dtld_parsing.vehicle_data import VehicleData
+"""
+DTLD_v1 suppports only .yml files
+DTLD_v2(04/2020) only supports .json files
+"""
 
 
 class DriveuObject:
@@ -20,14 +27,25 @@ class DriveuObject:
     Class holding properties of a label object in the dataset
 
     Attributes:
-        x(int):          X coordinate of upper left corner of bouding box label
-        y(int):          Y coordinate of upper left corner of bouding box label
-        width(int):      Width of bounding box label
-        height(int):     Height of bounding box label
-        class_id(int):   6 Digit class idenntity of bounding box label (Digit
-        explanation see documentation pdf)
+        x(int):             X coordinate of upper left corner of bbbox label
+        y(int):             Y coordinate of upper left corner of bbox label
+        width(int):         Width of bounding box label
+        height(int):        Height of bounding box label
+        attributes(dict):   Attributes dictionary with label attributes
+                            "direction" =   ["front" || "back" || "left"
+                            || "right"],
+                            "occlusion" = ["occluded" || "not_occluded"],
+                            "relevance" = ["relevant" || "not_relevant"],
+                            "orientation" = ["vertical" || "horizontal"],
+                            "aspects" = ["one_aspect" || "two_aspects",
+                            || "three_aspects" || "four_aspects" || "unknown"],
+                            "state" = ["red" || "green" || "yellow"
+                            || "red_yellow" || "off" || "unknown"]
+                            "pictogram" = ["circle" || "arrow_left"
+                            || "arrow_right" || "arrow_straight" || "tram"
+                            || "pedestrian" || "bicycle" || unknown]
         unique_id(int):  Unique ID of the object
-        track_id(string):Track ID of the object (representing one real-world
+        track_id(string):Track ID of the objec (representing one real-world
         TL instance)
     """
 
@@ -36,26 +54,26 @@ class DriveuObject:
         self.y = 0
         self.width = 0
         self.height = 0
-        self.class_id = 0
+        self.attributes = {}
         self.unique_id = 0
         self.track_id = 0
 
     def parse_object_dict(self, object_dict: dict):
         """
-        Method loading label data from yaml file dict
+        Method loading label data from json file dict
 
         Args:
-            object_dict(dict): label dictionary read from yaml file
+            object_dict(dict): label dictionary read from json file
         """
         self.x = object_dict["x"]
         self.y = object_dict["y"]
-        self.width = object_dict["width"]
-        self.height = object_dict["height"]
-        self.class_id = object_dict["class_id"]
+        self.width = object_dict["w"]
+        self.height = object_dict["h"]
+        self.attributes = object_dict["attributes"]
         self.unique_id = object_dict["unique_id"]
         self.track_id = object_dict["track_id"]
 
-    def color_from_class_id(self):
+    def color_from_attributes(self):
         """
         Return color for state of class identity
 
@@ -63,13 +81,13 @@ class DriveuObject:
             Color-vector (BGR) for traffic light visualization
         """
         # Second last digit indicates state/color
-        if str(self.class_id)[-2] == "1":
+        if self.attributes["state"] == "red":
             return (0, 0, 255)
-        elif str(self.class_id)[-2] == "2":
+        elif self.attributes["state"] == "yellow":
             return (0, 255, 255)
-        elif str(self.class_id)[-2] == "3":
+        elif self.attributes["state"] == "red_yellow":
             return (0, 165, 255)
-        elif str(self.class_id)[-2] == "4":
+        elif self.attributes["state"] == "green":
             return (0, 255, 0)
         else:
             return (255, 255, 255)
@@ -96,36 +114,35 @@ class DriveuImage:
 
     def parse_image_dict(self, image_dict: dict, data_base_dir: str = ""):
         """
-        Method loading image data from yaml file dict
+        Method loading image data from json file dict
 
         Args:
-            image_dict(dict): image dictionary read from yaml label file
+            image_dict(dict): image dictionary read from json label file
             data_base_dir(str): optional, if file paths are oudated
             (DTLD was moved from directory). Note that the internal
             DTLD should not be changed!
         """
         # Parse images
         if data_base_dir != "":
-            inds = [i for i, c in enumerate(image_dict["path"]) if c == "/"]
-            self.file_path = (
-                data_base_dir + "/" + image_dict["path"][inds[-4]:]
-            )
+            inds = [i for i, c in enumerate(image_dict["image_path"]) if c == "/"]
+            self.file_path = os.path.join(data_base_dir,
+                                          image_dict["image_path"][inds[-4]:].strip("/"))
             inds = [
-                i for i, c in enumerate(image_dict["disp_path"]) if c == "/"
+                i for i, c in enumerate(image_dict["disparity_image_path"]) if c == "/"
             ]
-            self.disp_file_path = (
-                data_base_dir + "/" + image_dict["disp_path"][inds[-4]:]
-            )
+            self.disp_file_path = os.path.join(data_base_dir,
+                                        image_dict["disparity_image_path"][inds[-4]:].strip("/"))
+
         else:
-            self.file_path = image_dict["path"]
-            self.disp_file_path = image_dict["disp_path"]
+            self.file_path = image_dict["image_path"]
+            self.disp_file_path = image_dict["disparity_image_path"]
             self.timestamp = image_dict["time_stamp"]
 
         # Parse vehicle data
         self.vehicle_data.parse_vehicle_data_dict(image_dict)
 
         # Parse labels
-        for o in image_dict["objects"]:
+        for o in image_dict["labels"]:
             label = DriveuObject()
             label.parse_object_dict(o)
             self.objects.append(label)
@@ -140,15 +157,17 @@ class DriveuImage:
         if os.path.isfile(self.file_path):
             # Load image from file path, do debayering and shift
             img = cv2.imread(self.file_path, cv2.IMREAD_UNCHANGED)
-            img = cv2.cvtColor(img, cv2.COLOR_BAYER_GB2BGR)
-            # Images are saved in 12 bit raw -> shift 4 bits
-            img = np.right_shift(img, 4)
-            img = img.astype(np.uint8)
+            if os.path.splitext(self.file_path)[1] == ".tiff":
+                img = cv2.cvtColor(img, cv2.COLOR_BAYER_GB2BGR)
+                # Images are saved in 12 bit raw -> shift 4 bits
+                img = np.right_shift(img, 4)
+                img = img.astype(np.uint8)
 
             return True, img
 
         else:
-            logging.exception("Image {} not found".format(self.file_path))
+            logging.error("Image {} not found. Please check image file paths!".format(self.file_path))
+            sys.exit(1)
             return False, np.array()
 
     def get_labeled_image(self):
@@ -167,7 +186,7 @@ class DriveuImage:
                     img,
                     (o.x, o.y),
                     (o.x + o.width, o.y + o.height),
-                    o.color_from_class_id(),
+                    o.color_from_attributes(),
                     2,
                 )
         return img
@@ -184,7 +203,12 @@ class DriveuImage:
         # quantization
         scale = 1.0 / 16.0
         # load raw image
-        img = cv2.imread(self.disp_file_path, cv2.IMREAD_UNCHANGED)
+        if os.path.isfile(self.disp_file_path):
+            img = cv2.imread(self.disp_file_path, cv2.IMREAD_UNCHANGED)
+        else:
+            logging.error("Disparity Image {} not found. Please check image file paths!".format(self.disp_file_path))
+            sys.exit(1)
+
         # do the magic
         img[img == 65535] = 0
         img &= 0x0FFF
@@ -232,11 +256,10 @@ class DriveuImage:
             # not rectified coordinates
             pt_distorted = np.array(
                 [
-                    [float(labels.x), float(labels.y)],
-                    [
-                        float(labels.x + labels.width),
-                        float(labels.y + labels.height),
-                    ],
+                    [float(labels.x),
+                     float(labels.y)],
+                    [float(labels.x + labels.width),
+                     float(labels.y + labels.height)],
                 ]
             )
             pt_distorted = pt_distorted[:, np.newaxis, :]
@@ -270,7 +293,7 @@ class DriveuDatabase:
 
     Attributes:
         images (List of DriveuImage)  All images of the dataset
-        file_path (string):           Path of the dataset (.yml)
+        file_path (string):           Path of the dataset (.json)
     """
 
     def __init__(self, file_path):
@@ -283,21 +306,21 @@ class DriveuDatabase:
 
         Args:
             data_base_dir(str): Base path where images are stored, optional
-            if image paths in yaml are outdated
+            if image paths in json are outdated
         """
 
         if os.path.exists(self.file_path) is not None:
-            logging.info(
-                "Opening DriveuDatabase from file: {}".format(self.file_path)
-            )
-            images = yaml.load(open(self.file_path, "rb").read())
+            logging.info("Opening DriveuDatabase from file: {}"
+                         .format(self.file_path))
+            with open(self.file_path, "r") as fp:
+                images = json.load(fp)
         else:
             logging.exception(
                 "Opening DriveuDatabase from File: {} "
                 "failed. File or Path incorrect.".format(self.file_path)
             )
 
-        for image_dict in images:
+        for image_dict in images["images"]:
             # parse and store image
             image = DriveuImage()
             image.parse_image_dict(image_dict, data_base_dir)
