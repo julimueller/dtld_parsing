@@ -1,19 +1,20 @@
 from __future__ import print_function
 
-__author__ = "Andreas Fregin, Julian Mueller and Klaus Dietmayer"
-__maintainer__ = "Julian Mueller"
-__email__ = "julian.mu.mueller@daimler.com"
-
 import argparse
 import logging
 import sys
 
+import matplotlib.pyplot as plt
 import numpy as np
-from dtld_parsing.calibration import CalibrationData
 
 import cv2
+from dtld_parsing.calibration import CalibrationData
 from dtld_parsing.driveu_dataset import DriveuDatabase
-import matplotlib.pyplot as plt
+
+__author__ = "Andreas Fregin, Julian Mueller and Klaus Dietmayer"
+__maintainer__ = "Julian Mueller"
+__email__ = "julian.mu.mueller@daimler.com"
+
 
 np.set_printoptions(suppress=True)
 
@@ -31,9 +32,20 @@ logging.basicConfig(
 def parse_args():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--label_file", default="")
-    parser.add_argument("--calib_dir", default="")
-    parser.add_argument("--data_base_dir", default="")
+    parser.add_argument("--label_file",
+                        help="DTLD label files (.json)",
+                        type=str,
+                        required=True)
+    parser.add_argument("--calib_dir",
+                        help="calibration directory where .yml are stored",
+                        type=str,
+                        required=True)
+    parser.add_argument("--data_base_dir",
+                        default="",
+                        help="only use this if the image file paths in the"
+                        "label files are not up to date. Do NOT change the"
+                        "internal DTLD folder structure!",
+                        type=str)
     return parser.parse_args()
 
 
@@ -98,7 +110,7 @@ def main(args):
             im1 = ax1.imshow(img_concat_rgb)
         plt.ion()
         im1.set_data(img_concat_rgb)
-        plt.pause(0.1)
+        plt.pause(0.001)
         plt.draw()
 
 
