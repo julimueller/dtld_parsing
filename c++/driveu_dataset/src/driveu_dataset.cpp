@@ -8,46 +8,43 @@
     @brief      Contains class definitions and methods to parse the DriveU Database: Label format, load images, load disparity images and load calibration data. Either with or without OpenCV.
 */
 
-
-bool DriveuObject::parseObjectDict(const Json::Value &object_dict)
-{
-
-    // bounding box corner and size
-    m_x_ = object_dict["x"].asInt();
-    m_y_ = object_dict["y"].asInt();
-    m_width_ = object_dict["w"].asInt();
-    m_height_ = object_dict["h"].asInt();
-
-    // track and unique identity
-    m_track_id_ = object_dict["track_id"].asString();
-    m_unique_id_ = object_dict["unique_id"].asInt();
-
-    // attributes (deprecated: class_id)
-    m_direction_ = DriveuAttribute("direction", object_dict["attributes"]["direction"].asString());
-    m_relevance_ = DriveuAttribute("relevance", object_dict["attributes"]["relevance"].asString());
-    m_occlusion_ = DriveuAttribute("occlusion", object_dict["attributes"]["occlusion"].asString());
-    m_orientation_ = DriveuAttribute("orientation", object_dict["attributes"]["orientation"].asString());
-    m_aspects_ = DriveuAttribute("aspects", object_dict["attributes"]["aspects"].asString());
-    m_state_ = DriveuAttribute("state", object_dict["attributes"]["state"].asString());
-    m_pictogram_ = DriveuAttribute("pictogram", object_dict["attributes"]["pictogram"].asString());
-
-    return true;
-}
-
 /* ##################### DRIVEU IMAGE ##################### */
 
-
-bool DriveuImage::parseImageDict(const Json::Value &image_dict)
+std::string DriveuImage::modifyImagePath(const std::string &data_base_dir, const std::string &file_path) const
 {
+    std::uint8_t cnt = 0;
+    std::uint8_t i = 0;
+    for (i = file_path.rfind("/"); i != std::string::npos; i = file_path.rfind("/", i - 1))
+    {
+        ++cnt;
+        // Finding "cat" at the start means we're done.
+        if (i == 0 || cnt == 4)
+        {
+            break;
+        }
+    }
+    return data_base_dir + '/' + file_path.substr(i, file_path.size() - 1);
+}
 
-    m_file_path_ = image_dict["image_path"].asString();
-    m_disp_file_path_ = image_dict["disparity_image_path"].asString();
+bool DriveuImage::parseImageDict(const Json::Value &image_dict, const std::string &data_base_dir)
+{
+    if (data_base_dir != "")
+    {
+        m_file_path_ = modifyImagePath(data_base_dir, image_dict["image_path"].asString());
+        m_disp_file_path_ = modifyImagePath(data_base_dir, image_dict["disparity_image_path"].asString());
+    }
+    else
+    {
+        m_file_path_ = image_dict["image_path"].asString();
+        m_disp_file_path_ = image_dict["disparity_image_path"].asString();
+    }
+
     m_timestamp_ = image_dict["time_stamp"].asDouble();
     m_vehicle_data_.parseImageDict(image_dict);
 
     const Json::Value my_objects = image_dict["labels"];
 
-    for (uint index = 0; index < my_objects.size(); ++index)
+    for (std::uint32_t index = 0; index < my_objects.size(); ++index)
     {
         DriveuObject label;
         label.parseObjectDict(my_objects[index]);
@@ -55,77 +52,6 @@ bool DriveuImage::parseImageDict(const Json::Value &image_dict)
     }
 
     return true;
-}
-
-/* ##################### DRIVEU DATABASE ##################### */
-
-/**
- * @brief DriveuDatabase::DriveuDatabase    Constructor
- */
-DriveuDatabase::DriveuDatabase()
-{
-}
-
-/**
- * @brief DriveuDatabase::open  Open the DriveU Database from file
- * @param                       Path to database (yml)
- */
-bool DriveuDatabase::open(const std::string &path, const std::string &base_path)
-{
-
-    DriveuObject object;
-    Json::Value root;
-    Json::CharReaderBuilder builder;
-    std::ifstream db(path, std::ifstream::binary);
-    std::string errs;
-    bool ok = Json::parseFromStream(builder, db, &root, &errs);
-    if (!ok)
-    {
-        // report to the user the failure and their locations in the document.
-        std::cout << errs << "\n";
-        return false;
-    }
-
-    const Json::Value my_images = root["images"];
-
-    for (uint index = 0; index < my_images.size(); ++index)
-    {
-        DriveuImage image;
-        image.parseImageDict(my_images[index]);
-        m_images_.push_back(image);
-    }
-    return true;
-}
-
-cv::Scalar DriveuObject::colorFromAttribute() const
-{
-
-    if (m_state_.m_class_ == "red")
-    {
-        return cv::Scalar(0, 0, 255);
-    }
-    else if (m_state_.m_class_ == "yellow")
-    {
-        return cv::Scalar(0, 255, 255);
-    }
-    else if (m_state_.m_class_ == "red_yellow")
-    {
-        return cv::Scalar(0, 165, 255);
-    }
-    else if (m_state_.m_class_ == "green")
-    {
-        return cv::Scalar(0, 255, 0);
-    }
-    else
-    {
-        return cv::Scalar(255, 255, 255);
-    }
-}
-
-
-cv::Rect DriveuObject::getRect() const
-{
-    return cv::Rect(m_x_, m_y_, m_width_, m_height_);
 }
 
 cv::Mat DriveuImage::getImage() const
@@ -145,7 +71,7 @@ cv::Mat DriveuImage::getImage() const
     }
 }
 
-cv::Mat DriveuImage::getImage16Bit()
+cv::Mat DriveuImage::getImage16Bit(Decompand &decompand)
 {
     cv::Mat imageMat = cv::imread(m_file_path_, -1);
 
@@ -158,7 +84,7 @@ cv::Mat DriveuImage::getImage16Bit()
 
     for (size_t p = 0; p < size_t(imageMat.rows) * size_t(imageMat.cols); ++p)
     {
-        m_decomp_.processPixel(src[p], dst[p]);
+        decompand.processPixel(src[p], dst[p]);
     }
 
     cv::cvtColor(linear, linear, CV_BayerGB2BGR);
@@ -195,7 +121,7 @@ cv::Mat DriveuImage::getDisparityImage() const
             }
         }
 
-        return imageMat;
+        return dispMat;
     }
     else
     {
@@ -233,9 +159,7 @@ std::vector<cv::Rect> DriveuImage::mapLabelsToDisparityImage(CalibrationData &ca
     return rects_disparity;
 }
 
-
 #ifdef OpenCV_FOUND
-
 
 void DriveuImage::visualizeDisparityImage(cv::Mat &dispMat) const
 {
@@ -263,3 +187,89 @@ cv::Mat DriveuImage::getLabeledImage() const
 }
 
 #endif
+
+/* ##################### DRIVEU DATABASE ##################### */
+
+bool DriveuDatabase::open(const std::string &path, const std::string &base_path)
+{
+
+    DriveuObject object;
+    Json::Value root;
+    Json::CharReaderBuilder builder;
+    std::ifstream db(path, std::ifstream::binary);
+    std::string errs;
+    bool ok = Json::parseFromStream(builder, db, &root, &errs);
+    if (!ok)
+    {
+        // report to the user the failure and their locations in the document.
+        std::cout << errs << "\n";
+        return false;
+    }
+
+    const Json::Value my_images = root["images"];
+
+    for (std::uint32_t index = 0; index < my_images.size(); ++index)
+    {
+        DriveuImage image;
+        image.parseImageDict(my_images[index], base_path);
+        m_images_.push_back(image);
+    }
+    return true;
+}
+
+/* ##################### DRIVEU OBJECT ##################### */
+
+bool DriveuObject::parseObjectDict(const Json::Value &object_dict)
+{
+
+    // bounding box corner and size
+    m_x_ = object_dict["x"].asInt();
+    m_y_ = object_dict["y"].asInt();
+    m_width_ = object_dict["w"].asInt();
+    m_height_ = object_dict["h"].asInt();
+
+    // track and unique identity
+    m_track_id_ = object_dict["track_id"].asString();
+    m_unique_id_ = object_dict["unique_id"].asInt();
+
+    // attributes (deprecated: class_id)
+    m_direction_ = DriveuAttribute("direction", object_dict["attributes"]["direction"].asString());
+    m_relevance_ = DriveuAttribute("relevance", object_dict["attributes"]["relevance"].asString());
+    m_occlusion_ = DriveuAttribute("occlusion", object_dict["attributes"]["occlusion"].asString());
+    m_orientation_ = DriveuAttribute("orientation", object_dict["attributes"]["orientation"].asString());
+    m_aspects_ = DriveuAttribute("aspects", object_dict["attributes"]["aspects"].asString());
+    m_state_ = DriveuAttribute("state", object_dict["attributes"]["state"].asString());
+    m_pictogram_ = DriveuAttribute("pictogram", object_dict["attributes"]["pictogram"].asString());
+
+    return true;
+}
+
+cv::Scalar DriveuObject::colorFromAttribute() const
+{
+
+    if (m_state_.m_class_ == "red")
+    {
+        return cv::Scalar(0, 0, 255);
+    }
+    else if (m_state_.m_class_ == "yellow")
+    {
+        return cv::Scalar(0, 255, 255);
+    }
+    else if (m_state_.m_class_ == "red_yellow")
+    {
+        return cv::Scalar(0, 165, 255);
+    }
+    else if (m_state_.m_class_ == "green")
+    {
+        return cv::Scalar(0, 255, 0);
+    }
+    else
+    {
+        return cv::Scalar(255, 255, 255);
+    }
+}
+
+cv::Rect DriveuObject::getRect() const
+{
+    return cv::Rect(m_x_, m_y_, m_width_, m_height_);
+}

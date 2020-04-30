@@ -84,15 +84,7 @@ class DriveuImage
 {
 
 public:
-    DriveuImage() : m_file_path_(""), m_disp_file_path_(""), m_timestamp_(0.), m_vehicle_data_(VehicleData()), m_objects_({})
-    {
-        std::map<int, std::vector<int>> map;
-        map[1023] = {1023, 1};
-        map[2559] = {4095, 2};
-        map[3455] = {32767, 32};
-        map[3967] = {65535, 64};
-        m_decomp_ = Decompand(map);
-    };
+    DriveuImage() : m_file_path_(""), m_disp_file_path_(""), m_timestamp_(0.), m_vehicle_data_(VehicleData()), m_objects_({}){};
 
     /// File path of left color image
     std::string m_file_path_;
@@ -104,13 +96,21 @@ public:
     VehicleData m_vehicle_data_;
     /// List of labels in frame
     std::vector<DriveuObject> m_objects_;
-    /// Decompanding (needed for 12 -> 16 bit)
-    Decompand m_decomp_;
     /**
-     * @brief       Parses image dictionary from json label file
-     * @returns     Success
+     * @brief               Parses image dictionary from json label file
+     * @param image_dict    Image dictionary from json file
+     * @param data_base_dir Optional base directory of image data (if differing from label file image paths)
+     * @returns             Success
      * */
-    bool parseImageDict(const Json::Value &image_dict);
+    bool parseImageDict(const Json::Value &image_dict, const std::string &data_base_dir);
+
+     /**
+     * @brief               Modifys image base path
+     * @param data_base_dir Optional base directory of image data (if differing from label file image paths)
+     * @param file_path     Initial absolute image path from label file
+     * * @returns           Modified absolute image path
+     * */
+    std::string modifyImagePath(const std::string &data_base_dir, const std::string &file_path) const;
 
 #ifdef OpenCV_FOUND
     /**
@@ -122,10 +122,11 @@ public:
      * @brief    Returning 16 bit left color image (BGR channel order)
      * @returns  cv::Mat
      * */
-    cv::Mat getImage16Bit();
+    cv::Mat getImage16Bit(Decompand &decompand);
     /**
-     * @brief   return disparity image as float, where each pixel contains the disparity in pixels. Please note, that the disparity image has a smaller resolution than the original image and for the lower 144 pixels no disparity values are available
-     * @returns cv::Mat 32FC1
+     * @brief           return disparity image as float, where each pixel contains the disparity in pixels. Please note, that the disparity image has a smaller resolution than the original image and for the lower 144 pixels no disparity values are available
+     * @param decompand Decompanding instance needed for converting 12 ->16 bit.
+     * @returns         cv::Mat 32FC1
      * */
     cv::Mat getDisparityImage() const;
     /**
@@ -150,7 +151,7 @@ class DriveuDatabase
 {
 
 public:
-    DriveuDatabase();
+    DriveuDatabase() : m_images_({}){};
     // all images of the dataset
     std::vector<DriveuImage> m_images_;
     /**
