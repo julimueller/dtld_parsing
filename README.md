@@ -1,3 +1,16 @@
+# Important information (05/2020)
+
+**05/2020: The label format changed from .yml to .json**. This should help to load the dataset significantly faster (especially in Python). Moreover the following changed:
+
+1. **Class Identity is replaced by attributes dictionary**. The attributes dictionary contains the keys "direction", "relevance", "occlusion", "orientation", "aspects", "state" and "pictogram".
+2. Some labels may have the items **("aspects", "unknown"), ("state", "unknown") or ("pictogram", "unknown")**. This differs to the labels in the yml format, which always had one default value even if the label information changed. Note that due to this your results on json max differ to .yml
+3. **MATLAB reader is deprecated**. If you want to use .json in MATLAB you have to write your own reader. Do not hesitate to create a pull request.
+4. **API in C++ and Python** slightly **changed**. Take a look into the code!
+
+The amount of overall labels/images is **NOT** changed. The image data itself is also untouched.
+
+For everybody who still wants to work with the old .yml files: You can simply checkout the state tagged as "v1". If you are not able to see the tag do not forget to fetch & pull.
+
 # The DriveU Traffic Light Dataset (DTLD): Introduction and Comparison with Existing Datasets
 This repository provides code for parsing the DriveU Traffic Light Dataset (DTLD), which is published in the course of our 2018 ICRA publication "The DriveU Traffic Light Dataset: Introduction and Comparison with Existing Datasets".
 
@@ -7,6 +20,32 @@ Paper see https://ieeexplore.ieee.org/document/8460737.
 **INFO (11/27/2018): The Dataset is online now!**
 
 The data can be downloaded from http://www.traffic-light-data.com/.
+
+NEW v2 05/2020: json label format
+
+    .
+    ├── DTLD                 # DTLD
+        ├── Berlin           # Contains all Routes of Berlin
+        ├── Bochum           # Contains all routes of Bochum
+        ├── Bremen           # Contains all routes of Bremen
+        ├── Dortmund         # Contains all routes of Dortmund
+        ├── Duesseldorf      # Contains all routes of Duesseldorf
+        ├── Essen            # Contains all routes of Essen
+        ├── Frankfurt        # Contains all routes of Frankfurt
+        ├── Fulda            # Contains all routes of Fulda
+        ├── Hannover         # Contains all routes of Hannover
+        ├── Kassel           # Contains all routes of Kassel
+        ├── Koeln            # Contains all routes of Cologne
+        ├── Berlin_all.json   # Label file for Berlin
+        ├── ...
+        ├── Koeln_all.json    # Label file for Cologne
+        ├── DTLD_all.json     # Complete label file
+        ├── DTLD_train.json   # Training file
+        ├── DTLD_test.json    # Testing file
+        ├── LICENSE          # License
+        └── README.md        # Readme
+
+DEPRECATED: DTLD_v1 (yml-Files)
 
     .
     ├── DTLD                 # DTLD
@@ -95,6 +134,9 @@ python3 load_dtld.py --label_file <label_file_path.yml> --calib_dir <path_to_cal
 ```
 Result should look like above
 ### MATLAB
+
+NOTE 05/2020: MATLAB support is deprecated and will likely not be added for the new label format (json).
+
 Run main.m
 
 Results should look like this
