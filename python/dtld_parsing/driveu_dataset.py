@@ -206,8 +206,9 @@ class DriveuImage:
         if os.path.isfile(self.disp_file_path):
             img = cv2.imread(self.disp_file_path, cv2.IMREAD_UNCHANGED)
         else:
-            logging.error("Disparity Image {} not found. Please check image file paths!".format(self.disp_file_path))
+            logging.info("Disparity Image {} not found. Please check image file paths!".format(self.disp_file_path))
             sys.exit(1)
+            return None
 
         # do the magic
         img[img == 65535] = 0
@@ -215,7 +216,7 @@ class DriveuImage:
         # convert to float
         img = img.astype(np.float32)
         # scale
-        np.multiply(img, scale, out=img, casting="unsafe")
+        img = np.multiply(img, scale, out=img, casting="unsafe")
         return img
 
     def visualize_disparity_image(self):
