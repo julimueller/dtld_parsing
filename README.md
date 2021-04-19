@@ -2,7 +2,7 @@
 
 **05/2020: The label format changed from .yml to .json**. This should help to load the dataset significantly faster (especially in Python). Moreover the following changed:
 
-1. **Class Identity is replaced by attributes dictionary**. The attributes dictionary contains the keys "direction", "relevance", "occlusion", "orientation", "aspects", "state" and "pictogram".
+1. **Class Identity is replaced by attributes dictionary**. The attributes dictionary contains the keys "direction", "relevance", "occlusion", "orientation", "aspects", "state" and "pictogram". New since v2.0 is the "reflection" attribute.
 2. Some labels may have the items **("aspects", "unknown"), ("state", "unknown") or ("pictogram", "unknown")**. This differs to the labels in the yml format, which always had one default value even if the label information changed. Note that due to this your results on json max differ to .yml
 3. **MATLAB reader is deprecated**. If you want to use .json in MATLAB you have to write your own reader. Do not hesitate to create a pull request.
 4. **API in C++ and Python** slightly **changed**. Take a look into the code!
@@ -21,7 +21,7 @@ Paper see https://ieeexplore.ieee.org/document/8460737.
 
 The data can be downloaded from http://www.traffic-light-data.com/.
 
-NEW v2 05/2020: json label format
+NEW v2 04/2021: json label format
 
     .
     ├── DTLD                 # DTLD
@@ -36,12 +36,8 @@ NEW v2 05/2020: json label format
         ├── Hannover         # Contains all routes of Hannover
         ├── Kassel           # Contains all routes of Kassel
         ├── Koeln            # Contains all routes of Cologne
-        ├── Berlin_all.json   # Label file for Berlin
-        ├── ...
-        ├── Koeln_all.json    # Label file for Cologne
-        ├── DTLD_all.json     # Complete label file
-        ├── DTLD_train.json   # Training file
-        ├── DTLD_test.json    # Testing file
+        ├── DTLD_labels_v1.0 # Old labels (v1.0) in yml-format
+        ├── DTLD_labels_v2.0 # New labels (v2.0) in json-format
         ├── LICENSE          # License
         └── README.md        # Readme
 
@@ -60,12 +56,7 @@ DEPRECATED: DTLD_v1 (yml-Files)
         ├── Hannover         # Contains all routes of Hannover
         ├── Kassel           # Contains all routes of Kassel
         ├── Koeln            # Contains all routes of Cologne
-        ├── Berlin_all.yml   # Label file for Berlin
-        ├── ...
-        ├── Koeln_all.yml    # Label file for Cologne
-        ├── DTLD_all.yml     # Complete label file
-        ├── DTLD_train.yml   # Training file
-        ├── DTLD_test.yml    # Testing file
+        ├── DTLD_labels      # Labels in yml-format
         ├── LICENSE          # License
         └── README.md        # Readme
 
