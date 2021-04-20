@@ -1,15 +1,15 @@
-# Important information (05/2020)
+# Important information (04/2021)
 
-**05/2020: The label format changed from .yml to .json**. This should help to load the dataset significantly faster (especially in Python). Moreover the following changed:
+**04/2021: The label format changed from .yml to .json**. This should help to load the dataset significantly faster (especially in Python). Moreover the following changed:
 
 1. **Class Identity is replaced by attributes dictionary**. The attributes dictionary contains the keys "direction", "relevance", "occlusion", "orientation", "aspects", "state" and "pictogram". New since v2.0 is the "reflection" attribute.
 2. Some labels may have the items **("aspects", "unknown"), ("state", "unknown") or ("pictogram", "unknown")**. This differs to the labels in the yml format, which always had one default value even if the label information changed. Note that due to this your results on json max differ to .yml
 3. **MATLAB reader is deprecated**. If you want to use .json in MATLAB you have to write your own reader. Do not hesitate to create a pull request.
 4. **API in C++ and Python** slightly **changed**. Take a look into the code!
 
-The amount of overall labels/images is **NOT** changed. The image data itself is also untouched.
+The amount of overall images is **NOT** changed. The image data itself is also untouched. Number of objects is increased because many overlooked and reflected traffic lights are added. For some instances, wrong state and pictogram attribute label is corrected!
 
-For everybody who still wants to work with the old .yml files: You can simply checkout the state tagged as "v1". If you are not able to see the tag do not forget to fetch & pull.
+**For everybody who still wants to work with the old .yml files: You can simply checkout the state tagged as "v1.0".**
 
 # The DriveU Traffic Light Dataset (DTLD): Introduction and Comparison with Existing Datasets
 This repository provides code for parsing the DriveU Traffic Light Dataset (DTLD), which is published in the course of our 2018 ICRA publication "The DriveU Traffic Light Dataset: Introduction and Comparison with Existing Datasets".
@@ -126,7 +126,7 @@ python3 load_dtld.py --label_file <label_file_path.yml> --calib_dir <path_to_cal
 Result should look like above
 ### MATLAB
 
-NOTE 05/2020: MATLAB support is deprecated and will likely not be added for the new label format (json).
+NOTE 04/2021: MATLAB support is deprecated and will likely not be added for the new label format (json).
 
 Run main.m
 
